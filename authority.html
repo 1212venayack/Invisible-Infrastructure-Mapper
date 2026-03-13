@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Authority Dashboard — inframap.gov.in</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500;600;700&family=Noto+Serif:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --saffron:#FF9933;--saffron-d:#E07800;
+  --green:#138808;--green-l:#1aa30a;
+  --navy:#000080;--navy-d:#00006a;
+  --off-white:#f7f4ef;--text-dark:#1a1a1a;--text-mid:#444;--text-light:#666;
+  --border:#d4cfc8;--surface:#f0ede7;--card:#fff;--red-gov:#c0392b;
+  --gold:#c9a227;
+  --font-sans:'Noto Sans',sans-serif;--font-serif:'Noto Serif',serif;
+  --font-hindi:'Noto Sans Devanagari',sans-serif;
+}
+html,body{height:100%;}
+body{font-family:var(--font-sans);background:var(--off-white);color:var(--text-dark);
+  font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased;
+  display:flex;flex-direction:column;min-height:100vh;}
+
+/* ─── TOP GOV BAR ─── */
+.tgb{background:#1a1a2e;color:#ccc;font-size:11px;display:flex;align-items:center;
+  justify-content:space-between;padding:4px 20px;border-bottom:1px solid #333;flex-shrink:0;}
+.tgb-l{display:flex;align-items:center;gap:16px;}
+.tgb-r{display:flex;align-items:center;gap:12px;}
+.tgb a{color:#aaa;text-decoration:none;font-size:11px;}
+.tgb a:hover{color:#fff;}
+.sep{color:#444;}
+.flag{display:flex;gap:2px;align-items:center;}
+.fs{height:7px;width:3px;border-radius:1px;}
+.fs.s{background:#FF9933;}.fs.w{background:#fff;}.fs.g{background:#138808;}
+
+/* ─── TRICOLOR ─── */
+.tricolor{height:4px;background:linear-gradient(to right,var(--saffron) 33.33%,#fff 33.33% 66.66%,var(--green) 66.66%);flex-shrink:0;}
+
+/* ─── AUTHORITY HEADER BAR ─── */
+.auth-topbar{background:var(--green);padding:0 24px;display:flex;align-items:center;gap:16px;
+  min-height:52px;flex-shrink:0;}
+.auth-topbar-badge{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);
+  border-radius:3px;padding:4px 12px;font-size:11px;font-weight:700;color:#fff;letter-spacing:.5px;
+  display:flex;align-items:center;gap:6px;}
+.auth-topbar-title{font-size:14px;font-weight:700;color:#fff;margin-right:auto;}
+.auth-topbar-user{font-size:12px;color:rgba(255,255,255,.75);display:flex;align-items:center;gap:6px;}
+.btn-logout-auth{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:3px;
+  color:#fff;font-size:12px;font-weight:600;padding:5px 12px;cursor:pointer;font-family:var(--font-sans);
+  transition:all .15s;display:flex;align-items:center;gap:6px;}
+.btn-logout-auth:hover{background:rgba(255,255,255,.25);}
+
+/* ─── LAYOUT ─── */
+.layout{display:flex;flex:1;overflow:hidden;}
+
+/* ─── SIDEBAR ─── */
+.sidebar{width:240px;background:#fff;border-right:2px solid var(--border);display:flex;flex-direction:column;
+  flex-shrink:0;overflow-y:auto;height:100%;position:sticky;top:0;}
+.sb-brand{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:var(--navy);}
+.sb-brand-name{font-size:15px;font-weight:700;color:#fff;line-height:1;}
+.sb-brand-name .dot{color:var(--saffron);}.sb-brand-name .gov{color:#7ec8a0;}
+.sb-brand-sub{font-size:10px;color:rgba(255,255,255,.5);margin-top:3px;}
+.sb-tricolor{height:3px;background:linear-gradient(to right,var(--saffron) 33.33%,#fff 33.33% 66.66%,var(--green) 66.66%);}
+.sb-nav{flex:1;padding:12px 10px;}
+.sb-nav-label{font-size:10px;font-weight:700;color:var(--text-light);text-transform:uppercase;
+  letter-spacing:.7px;padding:8px 8px 4px;}
+.sb-item{display:flex;align-items:center;gap:10px;padding:10px;border-radius:3px;
+  color:var(--text-mid);cursor:pointer;font-size:13px;font-weight:500;border:none;background:none;
+  width:100%;text-align:left;font-family:var(--font-sans);transition:all .15s;margin-bottom:2px;
+  border-left:3px solid transparent;}
+.sb-item:hover{background:var(--surface);color:var(--navy);}
+.sb-item.active{background:rgba(19,136,8,.07);color:var(--green);border-left-color:var(--green);font-weight:600;}
+.sb-item svg{width:16px;height:16px;flex-shrink:0;}
+.sb-badge{margin-left:auto;background:var(--red-gov);color:#fff;font-size:10px;font-weight:700;
+  border-radius:20px;padding:1px 7px;}
+.sb-footer{border-top:1px solid var(--border);padding:12px;}
+.sb-user{background:rgba(19,136,8,.06);border:1px solid rgba(19,136,8,.15);border-radius:3px;
+  padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+.sb-user-avatar{width:32px;height:32px;border-radius:3px;background:var(--green);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sb-user-label{font-size:10px;color:var(--text-light);}
+.sb-user-role{font-size:12px;font-weight:700;color:var(--green);}
+.sb-logout{width:100%;padding:8px;background:#fff;border:1px solid var(--border);border-radius:3px;
+  color:var(--red-gov);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-sans);
+  display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s;}
+.sb-logout:hover{background:#fdf0ee;border-color:var(--red-gov);}
+
+/* ─── MAIN AREA ─── */
+.main-area{flex:1;display:flex;flex-direction:column;overflow:auto;}
+
+/* ─── HEADER ─── */
+.main-header{background:#fff;border-bottom:2px solid var(--border);padding:10px 24px;
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap;flex-shrink:0;
+  box-shadow:0 2px 6px rgba(0,0,0,.05);}
+.header-site-name{font-size:16px;font-weight:700;color:var(--navy);}
+.header-site-name .dot{color:var(--saffron);}.header-site-name .gov{color:var(--green);}
+.header-sep{width:1px;height:28px;background:var(--border);}
+.header-page-title{font-size:14px;font-weight:600;color:var(--green);
+  display:flex;align-items:center;gap:8px;}
+
+/* ─── BREADCRUMB ─── */
+.main-breadcrumb{background:var(--green);padding:7px 24px;display:flex;align-items:center;
+  gap:8px;font-size:11px;color:rgba(255,255,255,.6);flex-shrink:0;}
+.main-breadcrumb a{color:rgba(255,255,255,.7);text-decoration:none;cursor:pointer;}
+.main-breadcrumb a:hover{color:#fff;}
+.bc-sep{color:rgba(255,255,255,.3);}
+.bc-cur{color:#fff;font-weight:600;}
+
+/* ─── PAGE BODY ─── */
+.page-body{flex:1;padding:20px 24px;display:flex;flex-direction:column;gap:16px;}
+
+/* ─── STATS GRID ─── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;flex-shrink:0;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:4px;
+  padding:16px 18px;position:relative;overflow:hidden;transition:all .2s;}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.stat-card.navy::before{background:var(--navy);}
+.stat-card.red::before{background:var(--red-gov);}
+.stat-card.amber::before{background:var(--saffron);}
+.stat-card.green::before{background:var(--green);}
+.stat-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.09);transform:translateY(-1px);}
+.stat-icon{width:36px;height:36px;border-radius:4px;display:flex;align-items:center;justify-content:center;float:right;}
+.stat-icon.navy{background:rgba(0,0,128,.07);border:1px solid rgba(0,0,128,.14);}
+.stat-icon.red{background:rgba(192,57,43,.08);border:1px solid rgba(192,57,43,.15);}
+.stat-icon.amber{background:rgba(255,153,51,.1);border:1px solid rgba(255,153,51,.2);}
+.stat-icon.green{background:rgba(19,136,8,.08);border:1px solid rgba(19,136,8,.15);}
+.stat-icon svg{width:18px;height:18px;}
+.stat-label{font-size:11px;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;}
+.stat-num{font-family:var(--font-serif);font-size:28px;font-weight:700;line-height:1;}
+.stat-num.navy{color:var(--navy);}
+.stat-num.red{color:var(--red-gov);}
+.stat-num.amber{color:var(--saffron-d);}
+.stat-num.green{color:var(--green);}
+
+/* ─── PANEL ─── */
+.gov-panel{background:var(--card);border:1px solid var(--border);border-radius:4px;overflow:hidden;}
+.gov-panel-head{padding:12px 18px;border-bottom:1px solid var(--border);display:flex;
+  align-items:center;justify-content:space-between;background:var(--surface);gap:12px;flex-wrap:wrap;}
+.gov-panel-title{font-size:14px;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:8px;}
+.gov-panel-title::before{content:'';display:block;width:3px;height:16px;
+  background:linear-gradient(to bottom,var(--green),var(--navy));border-radius:2px;flex-shrink:0;}
+
+/* ─── FILTER TOOLBAR ─── */
+.filter-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.filter-select{border:1px solid var(--border);background:#fafafa;color:var(--text-dark);
+  border-radius:3px;padding:7px 12px;font-size:12px;cursor:pointer;outline:none;
+  font-family:var(--font-sans);transition:all .15s;}
+.filter-select:focus{border-color:var(--green);box-shadow:0 0 0 2px rgba(19,136,8,.08);}
+.filter-chip{padding:6px 14px;border-radius:3px;border:1px solid var(--border);background:#fff;
+  font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font-sans);transition:all .15s;
+  color:var(--text-mid);}
+.filter-chip:hover{background:var(--surface);}
+.filter-chip.active.high{background:rgba(192,57,43,.08);border-color:rgba(192,57,43,.3);color:var(--red-gov);}
+.filter-chip.active.medium{background:rgba(255,153,51,.1);border-color:rgba(255,153,51,.3);color:#b35900;}
+.filter-chip.active.low{background:rgba(19,136,8,.07);border-color:rgba(19,136,8,.25);color:#0a6804;}
+.filter-chip.active.all{background:rgba(0,0,128,.06);border-color:rgba(0,0,128,.2);color:var(--navy);}
+.search-input-auth{padding:7px 12px;border:1px solid var(--border);border-radius:3px;
+  font-family:var(--font-sans);font-size:12px;color:var(--text-dark);background:#fafafa;
+  outline:none;width:220px;transition:all .15s;}
+.search-input-auth:focus{border-color:var(--green);background:#fff;}
+.sort-info{font-size:11px;color:var(--text-light);margin-left:auto;white-space:nowrap;}
+
+/* ─── REPORT TABLE CONTAINER ─── */
+.reports-scroll{padding:16px;display:flex;flex-direction:column;gap:10px;
+  max-height:calc(100vh - 340px);overflow-y:auto;}
+.reports-scroll::-webkit-scrollbar{width:4px;}
+.reports-scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+
+/* ─── REPORT CARD ─── */
+.report-card{background:var(--card);border:1px solid var(--border);border-radius:3px;
+  padding:14px 16px;display:flex;align-items:flex-start;gap:14px;transition:all .15s;
+  position:relative;}
+.report-card:hover{box-shadow:0 2px 14px rgba(0,0,0,.08);transform:translateX(2px);}
+.report-card.completed{opacity:.7;background:#fafff9;}
+.rc-icon{width:38px;height:38px;border-radius:4px;display:flex;align-items:center;
+  justify-content:center;flex-shrink:0;}
+.rc-icon.h{background:rgba(192,57,43,.08);border:1px solid rgba(192,57,43,.15);}
+.rc-icon.s{background:rgba(19,136,8,.08);border:1px solid rgba(19,136,8,.15);}
+.rc-icon.r{background:rgba(201,162,39,.1);border:1px solid rgba(201,162,39,.2);}
+.rc-icon svg{width:20px;height:20px;}
+.rc-body{flex:1;min-width:0;}
+.rc-title{font-size:13px;font-weight:600;color:var(--text-dark);margin-bottom:5px;}
+.rc-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:11px;color:var(--text-light);}
+.rc-meta span{display:flex;align-items:center;gap:3px;}
+.sev-pill{display:inline-block;padding:2px 9px;border-radius:3px;font-size:10px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.3px;}
+.sev-pill.high{background:rgba(192,57,43,.1);color:var(--red-gov);border:1px solid rgba(192,57,43,.2);}
+.sev-pill.medium{background:rgba(255,153,51,.1);color:#b35900;border:1px solid rgba(255,153,51,.25);}
+.sev-pill.low{background:rgba(19,136,8,.08);color:#0a6804;border:1px solid rgba(19,136,8,.2);}
+.type-tag{padding:2px 8px;border-radius:3px;font-size:10px;font-weight:600;}
+.type-tag.h{background:rgba(192,57,43,.07);color:var(--red-gov);border:1px solid rgba(192,57,43,.15);}
+.type-tag.s{background:rgba(19,136,8,.07);color:#0a6804;border:1px solid rgba(19,136,8,.15);}
+.type-tag.r{background:rgba(201,162,39,.08);color:#7d5a00;border:1px solid rgba(201,162,39,.2);}
+.reporter-tag{background:rgba(0,0,128,.06);color:var(--navy);border:1px solid rgba(0,0,128,.12);
+  padding:2px 8px;border-radius:3px;font-size:10px;font-weight:600;}
+
+/* ─── ACTION AREA ─── */
+.rc-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;flex-direction:column;}
+.btn-complete{padding:8px 14px;background:var(--navy);color:#fff;border:none;border-radius:3px;
+  font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font-sans);
+  transition:all .15s;display:flex;align-items:center;gap:6px;white-space:nowrap;}
+.btn-complete:hover{background:var(--navy-d);transform:scale(1.03);}
+.btn-complete:disabled{background:var(--green);cursor:not-allowed;transform:none;}
+.btn-complete.done{background:var(--green);}
+.status-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:3px;
+  font-size:11px;font-weight:700;}
+.status-chip.pending{background:rgba(255,153,51,.12);color:#b35900;border:1px solid rgba(255,153,51,.3);}
+.status-chip.completed{background:rgba(19,136,8,.1);color:#0a6804;border:1px solid rgba(19,136,8,.25);}
+
+/* ─── PRIORITY INDICATOR ─── */
+.priority-bar{position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:3px 0 0 3px;}
+.priority-bar.high{background:var(--red-gov);}
+.priority-bar.medium{background:var(--saffron);}
+.priority-bar.low{background:var(--green);}
+
+/* ─── EMPTY STATE ─── */
+.empty-state{text-align:center;padding:60px 20px;color:var(--text-light);}
+.empty-state svg{margin:0 auto 16px;opacity:.3;}
+.empty-state p{font-size:15px;font-weight:600;color:var(--text-mid);margin-bottom:4px;}
+.empty-state small{font-size:13px;}
+
+/* ─── TOAST ─── */
+#toastContainer{position:fixed;top:70px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;max-width:360px;}
+.toast{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:#fff;
+  border:1px solid var(--border);border-left:4px solid var(--green);color:var(--text-dark);
+  font-size:13px;border-radius:3px;box-shadow:0 4px 20px rgba(0,0,0,.12);
+  animation:tin .35s cubic-bezier(.16,1,.3,1) both;}
+.toast.error{border-left-color:var(--red-gov);}
+.toast.info{border-left-color:var(--navy);}
+.toast-close{margin-left:auto;background:none;border:none;cursor:pointer;color:var(--text-light);font-size:18px;padding:0;line-height:1;}
+.toast.out{animation:tout .25s ease forwards;}
+@keyframes tin{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+@keyframes tout{to{opacity:0;transform:translateX(8px)}}
+
+/* ─── CONFIRM MODAL ─── */
+#confirmModal{position:fixed;inset:0;z-index:500;display:none;align-items:center;justify-content:center;
+  padding:20px;background:rgba(0,0,0,.45);backdrop-filter:blur(2px);}
+#confirmModal.open{display:flex;}
+.cm-box{background:#fff;border-radius:4px;width:100%;max-width:400px;
+  box-shadow:0 16px 48px rgba(0,0,0,.22);overflow:hidden;
+  animation:cmIn .3s cubic-bezier(.16,1,.3,1) both;}
+@keyframes cmIn{from{opacity:0;transform:scale(.95) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.cm-head{background:var(--green);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;}
+.cm-title{font-size:15px;font-weight:700;color:#fff;}
+.cm-tri{height:3px;background:linear-gradient(to right,#FF9933 33.33%,#fff 33.33% 66.66%,#138808 66.66%);}
+.cm-body{padding:22px;}
+.cm-msg{font-size:14px;color:var(--text-dark);line-height:1.6;margin-bottom:6px;}
+.cm-sub{font-size:12px;color:var(--text-light);}
+.cm-foot{padding:14px 20px;background:var(--surface);border-top:1px solid var(--border);
+  display:flex;gap:8px;justify-content:flex-end;}
+.cm-btn-cancel{padding:8px 18px;background:#fff;border:1px solid var(--border);border-radius:3px;
+  color:var(--text-mid);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-sans);}
+.cm-btn-cancel:hover{background:var(--surface);}
+.cm-btn-confirm{padding:8px 18px;background:var(--green);border:none;border-radius:3px;
+  color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-sans);
+  display:flex;align-items:center;gap:6px;transition:all .15s;}
+.cm-btn-confirm:hover{background:var(--green-l);}
+
+/* ─── FOOTER ─── */
+.main-footer{background:#1a1a2e;color:#777;font-size:11px;flex-shrink:0;}
+.footer-tri{height:4px;background:linear-gradient(to right,var(--saffron) 33.33%,#fff 33.33% 66.66%,var(--green) 66.66%);}
+.footer-bar{padding:10px 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;}
+.footer-bar a{color:#666;text-decoration:underline;cursor:pointer;}
+
+@media(max-width:900px){
+  .sidebar{display:none;}
+  .stats-grid{grid-template-columns:repeat(2,1fr);}
+  .rc-actions{flex-direction:row;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOP GOV BAR -->
+<div class="tgb">
+  <div class="tgb-l">
+    <div class="flag">
+      <div class="fs s"></div><div class="fs s"></div>
+      <div class="fs w"></div><div class="fs w"></div>
+      <div class="fs g"></div><div class="fs g"></div>
+    </div>
+    <a href="gov-portal.html">Government of India | inframap.gov.in</a>
+    <span class="sep">|</span>
+    <a href="#">Ministry of Housing &amp; Urban Affairs</a>
+  </div>
+  <div class="tgb-r">
+    <a href="gov-portal.html">Portal Home</a>
+    <span class="sep">|</span>
+    <a href="#">Help</a>
+  </div>
+</div>
+<div class="tricolor"></div>
+
+<!-- AUTHORITY TOP BAR -->
+<div class="auth-topbar">
+  <div class="auth-topbar-badge">
+    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/>
+    </svg>
+    GOVERNMENT AUTHORITY
+  </div>
+  <div class="auth-topbar-title">inframap.gov.in — Authority Command Centre</div>
+  <div class="auth-topbar-user">
+    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
+    </svg>
+    Authority Admin
+  </div>
+  <button class="btn-logout-auth" onclick="logout()">
+    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/>
+    </svg>
+    Sign Out
+  </button>
+</div>
+
+<div class="layout">
+
+  <!-- ─── SIDEBAR ─── -->
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <svg viewBox="0 0 100 100" fill="none" style="width:32px;height:32px;flex-shrink:0;">
+        <circle cx="50" cy="75" r="7" fill="none" stroke="rgba(255,153,51,.7)" stroke-width="1.5"/>
+        <line x1="50" y1="68" x2="50" y2="82" stroke="rgba(255,153,51,.5)" stroke-width="0.8"/>
+        <line x1="43" y1="75" x2="57" y2="75" stroke="rgba(255,153,51,.5)" stroke-width="0.8"/>
+        <ellipse cx="50" cy="55" rx="11" ry="14" fill="rgba(255,255,255,.2)"/>
+        <circle cx="50" cy="40" r="8" fill="rgba(255,255,255,.25)"/>
+        <polygon points="44,32 46,26 48,32" fill="rgba(255,153,51,.85)"/>
+        <polygon points="50,29 52,22 54,29" fill="rgba(255,153,51,.95)"/>
+        <polygon points="56,32 58,26 60,32" fill="rgba(255,153,51,.85)"/>
+      </svg>
+      <div>
+        <div class="sb-brand-name">inframap<span class="dot">.</span><span class="gov">gov</span>.in</div>
+        <div class="sb-brand-sub">Authority Dashboard</div>
+      </div>
+    </div>
+    <div class="sb-tricolor"></div>
+
+    <nav class="sb-nav">
+      <div class="sb-nav-label">Authority Menu</div>
+      <button class="sb-item active" onclick="setView('all')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/>
+        </svg>
+        All Reports
+        <span class="sb-badge" id="sbAllCount">0</span>
+      </button>
+      <button class="sb-item" onclick="setView('pending')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        Pending
+        <span class="sb-badge" id="sbPendingCount">0</span>
+      </button>
+      <button class="sb-item" onclick="setView('completed')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        Completed
+      </button>
+      <div class="sb-nav-label" style="margin-top:12px;">Quick Filters</div>
+      <button class="sb-item" onclick="quickFilter('high')">
+        <svg fill="none" stroke="var(--red-gov)" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z"/>
+        </svg>
+        High Priority
+      </button>
+      <button class="sb-item" onclick="quickFilter('hospital')">
+        <svg fill="none" stroke="var(--red-gov)" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+        </svg>
+        Hospitals Only
+      </button>
+      <button class="sb-item" onclick="quickFilter('school')">
+        <svg fill="none" stroke="var(--green)" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443m-7.007 11.55A5.981 5.981 0 006.75 15.75v-1.5"/>
+        </svg>
+        Schools Only
+      </button>
+    </nav>
+
+    <div class="sb-footer">
+      <div class="sb-user">
+        <div class="sb-user-avatar">
+          <svg fill="none" stroke="#fff" viewBox="0 0 24 24" stroke-width="2" style="width:16px;height:16px;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="sb-user-label">Logged in as</div>
+          <div class="sb-user-role">Government Authority</div>
+        </div>
+      </div>
+      <button class="sb-logout" onclick="logout()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/>
+        </svg>
+        Sign Out
+      </button>
+    </div>
+  </aside>
+
+  <!-- ─── MAIN AREA ─── -->
+  <div class="main-area">
+    <!-- Header -->
+    <div class="main-header">
+      <a href="gov-portal.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0;">
+        <svg viewBox="0 0 100 100" fill="none" style="width:32px;height:32px;">
+          <rect x="20" y="82" width="60" height="5" rx="1" fill="#1a1a6a"/>
+          <ellipse cx="50" cy="55" rx="11" ry="14" fill="#000080"/>
+          <circle cx="50" cy="40" r="8" fill="#000080"/>
+          <circle cx="50" cy="40" r="11" fill="none" stroke="#000080" stroke-width="1.5"/>
+          <polygon points="44,32 46,26 48,32" fill="#FF9933"/>
+          <polygon points="50,29 52,22 54,29" fill="#FF9933"/>
+          <polygon points="56,32 58,26 60,32" fill="#FF9933"/>
+          <circle cx="50" cy="75" r="6" fill="none" stroke="#000080" stroke-width="1.2"/>
+        </svg>
+        <div class="header-site-name">inframap<span class="dot">.</span><span class="gov">gov</span>.in</div>
+      </a>
+      <div class="header-sep"></div>
+      <div class="header-page-title">
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/>
+        </svg>
+        Authority Command Centre
+      </div>
+    </div>
+
+    <!-- Breadcrumb -->
+    <div class="main-breadcrumb">
+      <a href="gov-portal.html">Home</a>
+      <span class="bc-sep">›</span>
+      <a href="gov-portal.html">Authority Login</a>
+      <span class="bc-sep">›</span>
+      <span class="bc-cur">Complaints Dashboard</span>
+    </div>
+
+    <!-- Page Body -->
+    <div class="page-body">
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card navy">
+          <div class="stat-icon navy">
+            <svg fill="none" stroke="var(--navy)" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/>
+            </svg>
+          </div>
+          <div class="stat-label">Total Reports</div>
+          <div class="stat-num navy" id="statTotal">0</div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-icon red">
+            <svg fill="none" stroke="var(--red-gov)" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z"/>
+            </svg>
+          </div>
+          <div class="stat-label">High Priority</div>
+          <div class="stat-num red" id="statHigh">0</div>
+        </div>
+        <div class="stat-card amber">
+          <div class="stat-icon amber">
+            <svg fill="none" stroke="var(--saffron-d)" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <div class="stat-label">Pending Action</div>
+          <div class="stat-num amber" id="statPending">0</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-icon green">
+            <svg fill="none" stroke="var(--green)" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <div class="stat-label">Resolved</div>
+          <div class="stat-num green" id="statResolved">0</div>
+        </div>
+      </div>
+
+      <!-- Reports Panel -->
+      <div class="gov-panel">
+        <div class="gov-panel-head">
+          <div>
+            <div class="gov-panel-title">Citizen Complaint Reports</div>
+            <div style="font-size:11px;color:var(--text-light);margin-top:3px;margin-left:11px;" id="panelSubtitle">
+              Sorted by priority (High → Medium → Low)
+            </div>
+          </div>
+          <div class="filter-toolbar">
+            <!-- Search -->
+            <input type="text" class="search-input-auth" id="searchInput" placeholder="🔍 Search title, location…" oninput="renderReports()">
+            <!-- Severity filter chips -->
+            <button class="filter-chip active all" id="chipAll" onclick="setChip('all')">All</button>
+            <button class="filter-chip high" id="chipHigh" onclick="setChip('high')">🔴 High</button>
+            <button class="filter-chip medium" id="chipMedium" onclick="setChip('medium')">🟡 Medium</button>
+            <button class="filter-chip low" id="chipLow" onclick="setChip('low')">🟢 Low</button>
+            <!-- Infra type filter -->
+            <select class="filter-select" id="filterType" onchange="renderReports()">
+              <option value="all">All Types</option>
+              <option value="hospital">🏥 Hospital</option>
+              <option value="school">🏫 School</option>
+              <option value="road">🛣️ Road</option>
+            </select>
+            <!-- Sort -->
+            <select class="filter-select" id="filterSort" onchange="renderReports()">
+              <option value="severity">Sort: Severity</option>
+              <option value="newest">Sort: Newest</option>
+              <option value="oldest">Sort: Oldest</option>
+            </select>
+            <span class="sort-info" id="sortInfo">Showing all</span>
+          </div>
+        </div>
+        <div id="reportsContainer" class="reports-scroll"></div>
+      </div>
+
+    </div><!-- /page-body -->
+
+    <footer class="main-footer">
+      <div class="footer-tri"></div>
+      <div class="footer-bar">
+        <span>© 2026 Government of India | inframap.gov.in | Ministry of Housing &amp; Urban Affairs</span>
+        <span><a href="#">Terms</a> | <a href="#">Privacy</a> | <a href="#">Disclaimer</a></span>
+      </div>
+    </footer>
+  </div><!-- /main-area -->
+
+</div><!-- /layout -->
+
+<!-- ─── CONFIRM COMPLETE MODAL ─── -->
+<div id="confirmModal">
+  <div class="cm-box">
+    <div class="cm-head">
+      <div class="cm-title">Confirm — Mark as Completed</div>
+    </div>
+    <div class="cm-tri"></div>
+    <div class="cm-body">
+      <div class="cm-msg" id="cmMsg">Are you sure you want to mark this report as completed?</div>
+      <div class="cm-sub">This action will update the status in the citizen's report history immediately.</div>
+    </div>
+    <div class="cm-foot">
+      <button class="cm-btn-cancel" onclick="closeConfirm()">Cancel</button>
+      <button class="cm-btn-confirm" id="cmConfirmBtn">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
+        </svg>
+        Mark Completed ✔
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="toastContainer"></div>
+
+<script>
+// ── AUTH GUARD ──
+(function(){
+  if(sessionStorage.getItem('authorityAuth')!=='true'){
+    alert('Access denied. Please login via the Authority Login portal.');
+    window.location.href='gov-portal.html';
+  }
+})();
+
+// ── CONSTANTS ──
+const SEV_ORDER={high:0,medium:1,low:2};
+
+// ── STATE ──
+let currentView='all';      // all | pending | completed
+let currentSevFilter='all'; // all | high | medium | low
+let pendingCompleteId=null;
+
+// ── STORAGE ──
+function getInfraReports(){
+  try{return JSON.parse(localStorage.getItem('infraReports')||'[]');}catch(e){return[];}
+}
+function saveInfraReports(r){
+  localStorage.setItem('infraReports',JSON.stringify(r));
+}
+
+// ── STATS ──
+function updateStats(){
+  const all=getInfraReports();
+  const total=all.length;
+  const high=all.filter(r=>r.severity==='high').length;
+  const pending=all.filter(r=>r.status!=='completed').length;
+  const resolved=all.filter(r=>r.status==='completed').length;
+  document.getElementById('statTotal').textContent=total;
+  document.getElementById('statHigh').textContent=high;
+  document.getElementById('statPending').textContent=pending;
+  document.getElementById('statResolved').textContent=resolved;
+  document.getElementById('sbAllCount').textContent=total;
+  document.getElementById('sbPendingCount').textContent=pending;
+}
+
+// ── FILTER CHIPS ──
+function setChip(sev){
+  currentSevFilter=sev;
+  ['all','high','medium','low'].forEach(function(s){
+    var el=document.getElementById('chip'+s.charAt(0).toUpperCase()+s.slice(1));
+    el.className='filter-chip'+(s===sev?' active '+s:'');
+  });
+  renderReports();
+}
+
+// ── VIEW TABS ──
+function setView(v){
+  currentView=v;
+  document.querySelectorAll('.sb-item').forEach(function(el){el.classList.remove('active');});
+  event&&event.currentTarget&&event.currentTarget.classList.add('active');
+  renderReports();
+}
+
+// ── QUICK FILTER ──
+function quickFilter(type){
+  if(type==='high'){
+    setChip('high');
+    document.getElementById('filterType').value='all';
+  } else {
+    document.getElementById('filterType').value=type;
+    setChip('all');
+  }
+}
+
+// ── GET FILTERED & SORTED REPORTS ──
+function getFilteredReports(){
+  var all=getInfraReports();
+  var search=document.getElementById('searchInput').value.toLowerCase().trim();
+  var typeFilter=document.getElementById('filterType').value;
+  var sortMode=document.getElementById('filterSort').value;
+
+  // View filter
+  if(currentView==='pending') all=all.filter(function(r){return r.status!=='completed';});
+  if(currentView==='completed') all=all.filter(function(r){return r.status==='completed';});
+
+  // Severity chip filter
+  if(currentSevFilter!=='all') all=all.filter(function(r){return r.severity===currentSevFilter;});
+
+  // Type filter
+  if(typeFilter!=='all') all=all.filter(function(r){return r.infrastructureType===typeFilter;});
+
+  // Search
+  if(search){
+    all=all.filter(function(r){
+      return (r.title||'').toLowerCase().includes(search)||
+             (r.location||'').toLowerCase().includes(search)||
+             (r.description||'').toLowerCase().includes(search)||
+             (r.user||'').toLowerCase().includes(search);
+    });
+  }
+
+  // Sort
+  if(sortMode==='severity'){
+    all.sort(function(a,b){
+      var s=SEV_ORDER[a.severity]-SEV_ORDER[b.severity];
+      if(s!==0)return s;
+      // Secondary: pending before completed
+      var aP=a.status==='completed'?1:0;
+      var bP=b.status==='completed'?1:0;
+      return aP-bP;
+    });
+  } else if(sortMode==='newest'){
+    all.sort(function(a,b){return new Date(b.timestamp)-new Date(a.timestamp);});
+  } else if(sortMode==='oldest'){
+    all.sort(function(a,b){return new Date(a.timestamp)-new Date(b.timestamp);});
+  }
+
+  return all;
+}
+
+// ── RENDER ──
+function renderReports(){
+  updateStats();
+  var reps=getFilteredReports();
+  var c=document.getElementById('reportsContainer');
+  document.getElementById('sortInfo').textContent='Showing '+reps.length+' of '+getInfraReports().length+' reports';
+
+  if(reps.length===0){
+    c.innerHTML='<div class="empty-state">'
+      +'<svg style="width:56px;height:56px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">'
+      +'<path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z"/>'
+      +'</svg>'
+      +'<p>No reports match your filters</p>'
+      +'<small>Try adjusting the severity, type, or search filters.</small>'
+      +'</div>';
+    return;
+  }
+
+  c.innerHTML=reps.map(function(r){
+    var isH=r.infrastructureType==='hospital';
+    var isR=r.infrastructureType==='road';
+    var iconClass=isH?'h':isR?'r':'s';
+    var isCompleted=r.status==='completed';
+    var date=r.timestamp
+      ?new Date(r.timestamp).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})
+      :'Unknown';
+
+    var iconSvg=isH
+      ?'<path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>'
+      :isR
+      ?'<path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z"/>'
+      :'<path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443m-7.007 11.55A5.981 5.981 0 006.75 15.75v-1.5"/>';
+
+    var infraLabel=isH?'&#127973; Hospital':isR?'&#128739; Road':'&#127979; School';
+    var iconStroke=isH?'var(--red-gov)':isR?'#7d5a00':'var(--green)';
+
+    var actionHtml=isCompleted
+      ?'<button class="btn-complete done" disabled>'
+        +'<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>'
+        +'Completed'
+        +'</button>'
+      :'<button class="btn-complete" onclick="askComplete(\''+r.id+'\',\''+escapeHtml(r.title||r.type)+'\')">'
+        +'<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>'
+        +'Mark Completed &#10004;'
+        +'</button>';
+
+    var statusChip=isCompleted
+      ?'<span class="status-chip completed">&#10004; Completed</span>'
+      :'<span class="status-chip pending">&#8987; Pending</span>';
+
+    return '<div class="report-card'+(isCompleted?' completed':'')+'">'
+      +'<div class="priority-bar '+r.severity+'"></div>'
+      +'<div class="rc-icon '+iconClass+'">'
+      +'<svg fill="none" stroke="'+iconStroke+'" viewBox="0 0 24 24" stroke-width="2">'+iconSvg+'</svg>'
+      +'</div>'
+      +'<div class="rc-body">'
+      +'<div class="rc-title">'+escapeHtml(r.title||r.type)+'</div>'
+      +(r.description?'<div style="font-size:12px;color:var(--text-light);margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">'+escapeHtml(r.description)+'</div>':'')
+      +'<div class="rc-meta">'
+      +'<span class="sev-pill '+r.severity+'">'+r.severity.toUpperCase()+'</span>'
+      +'<span class="type-tag '+iconClass+'">'+infraLabel+'</span>'
+      +(r.location?'<span>&#128205; '+escapeHtml(r.location)+'</span>':'')
+      +'<span>&#128336; '+date+'</span>'
+      +'<span class="reporter-tag">&#128100; '+escapeHtml(r.user||'Unknown')+'</span>'
+      +statusChip
+      +'</div>'
+      +'</div>'
+      +'<div class="rc-actions">'+actionHtml+'</div>'
+      +'</div>';
+  }).join('');
+}
+
+function escapeHtml(s){
+  if(!s)return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── MARK COMPLETE FLOW ──
+function askComplete(id,title){
+  pendingCompleteId=id;
+  document.getElementById('cmMsg').textContent='Mark "'+title+'" as Completed? Citizens will see the update instantly.';
+  document.getElementById('confirmModal').classList.add('open');
+}
+function closeConfirm(){
+  document.getElementById('confirmModal').classList.remove('open');
+  pendingCompleteId=null;
+}
+document.getElementById('cmConfirmBtn').addEventListener('click',function(){
+  if(!pendingCompleteId) return;
+  var all=getInfraReports();
+  var idx=all.findIndex(function(r){return r.id===pendingCompleteId;});
+  if(idx!==-1){
+    all[idx].status='completed';
+    all[idx].resolvedAt=new Date().toISOString();
+    saveInfraReports(all);
+    showToast('&#10004; Report marked as Completed — citizen view updated.','success');
+    renderReports();
+  }
+  closeConfirm();
+});
+document.getElementById('confirmModal').addEventListener('click',function(e){
+  if(e.target===document.getElementById('confirmModal')) closeConfirm();
+});
+
+// ── TOAST ──
+function showToast(msg,type){
+  var c=document.getElementById('toastContainer');
+  var t=document.createElement('div');
+  t.className='toast'+(type==='error'?' error':type==='info'?' info':'');
+  t.innerHTML='<span style="flex:1;">'+msg+'</span><button class="toast-close" onclick="this.parentElement.remove()">&#215;</button>';
+  c.appendChild(t);
+  setTimeout(function(){t.classList.add('out');setTimeout(function(){t.remove();},250);},3500);
+}
+
+// ── LOGOUT ──
+function logout(){
+  document.body.style.opacity='0';
+  document.body.style.transition='opacity .35s';
+  setTimeout(function(){
+    sessionStorage.removeItem('authorityAuth');
+    window.location.href='gov-portal.html';
+  },380);
+}
+
+// ── LIVE SYNC: auto-refresh if citizen submits a new report ──
+window.addEventListener('storage',function(e){
+  if(e.key==='infraReports') renderReports();
+});
+
+// ── BOOT ──
+renderReports();
+setTimeout(function(){
+  showToast('&#128272; Authority access granted. Welcome, Admin.','info');
+},600);
+</script>
+</body>
+</html>
