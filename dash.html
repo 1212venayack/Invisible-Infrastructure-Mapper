@@ -254,6 +254,8 @@ body{font-family:var(--font-sans);background:var(--off-white);color:var(--text-d
   resize:vertical;min-height:80px;transition:all .15s;}
 .modal-textarea:focus{border-color:var(--navy);background:#fff;box-shadow:0 0 0 3px rgba(0,0,128,.07);}
 .loc-row{display:flex;gap:8px;}
+@keyframes spin{from{transform:translateY(-50%) rotate(0deg)}to{transform:translateY(-50%) rotate(360deg)}}
+@keyframes coordFlash{0%,100%{background:#fafafa}50%{background:rgba(19,136,8,.12);border-color:var(--green);}}
 .modal-foot{padding:14px 22px;background:var(--surface);border-top:1px solid var(--border);}
 .btn-submit{width:100%;padding:10px;background:var(--navy);color:#fff;border:none;border-radius:3px;
   font-family:var(--font-sans);font-size:14px;font-weight:700;cursor:pointer;
@@ -491,7 +493,7 @@ body{font-family:var(--font-sans);background:var(--off-white);color:var(--text-d
                 <option value="medium">Medium</option>
                 <option value="low">Low</option>
               </select>
-              <button class="btn-clear" onclick="clearAllReports()">Clear All</button>
+              <!-- Citizens cannot delete reports -->
             </div>
           </div>
           <div id="reportsContainer" class="reports-scroll"></div>
@@ -526,43 +528,57 @@ body{font-family:var(--font-sans);background:var(--off-white);color:var(--text-d
     <div class="modal-body">
       <form id="reportForm">
         <div class="form-group">
-          <label class="form-label">Issue Type <span class="req">*</span></label>
+          <label class="form-label">Report Title <span class="req">*</span></label>
+          <input type="text" id="issueTitle" class="modal-input" placeholder="e.g., Power outage at CPR Hospital ICU" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Infrastructure Type <span class="req">*</span></label>
           <select id="issueType" class="modal-input" required>
-            <option value="">Select issue type…</option>
-            <optgroup label="🏥 Hospital Related">
-              <option>Water leakage in hospital building</option>
-              <option>Power outage in hospital ICU</option>
-              <option>Broken ambulance access road</option>
-              <option>Oxygen supply system failure</option>
-              <option>Emergency entrance blockage</option>
-            </optgroup>
-            <optgroup label="🏫 School Related">
-              <option>Broken water pipeline in school campus</option>
-              <option>Electricity failure in classrooms</option>
-              <option>Unsafe road near school entrance</option>
-              <option>Street light failure near school area</option>
-              <option>Drainage overflow near school building</option>
-            </optgroup>
+            <option value="">Select type…</option>
+            <option value="hospital">🏥 Hospital</option>
+            <option value="school">🏫 School</option>
+            <option value="road">🛣️ Road</option>
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label">Institution Name <span style="color:var(--text-light);font-weight:400;">(optional)</span></label>
-          <input type="text" id="issueInstitution" class="modal-input" placeholder="e.g., C.P.R. Hospital, Rajaram College">
+          <label class="form-label">Location / Area <span class="req">*</span></label>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <div style="position:relative;flex:1;">
+              <input 
+                type="text" 
+                id="issueLocation" 
+                class="modal-input" 
+                placeholder="e.g., CPR Hospital, Kolhapur"
+                oninput="scheduleDetect()"
+                onblur="detectLocation()"
+                required
+                style="padding-right:32px;"
+              >
+              <span id="locSpinner" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:14px;animation:spin 1s linear infinite;">⏳</span>
+              <span id="locOk" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--green);">✅</span>
+            </div>
+            <button type="button" onclick="detectLocation()" title="Detect coordinates"
+              style="padding:9px 12px;background:var(--navy);color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:13px;white-space:nowrap;font-family:var(--font-sans);transition:all .15s;"
+              onmouseover="this.style.background='#00006a'" onmouseout="this.style.background='var(--navy)'">
+              📍 Detect
+            </button>
+          </div>
+          <div id="locStatus" style="font-size:11px;margin-top:4px;color:var(--text-light);min-height:16px;"></div>
         </div>
         <div class="form-group">
-          <label class="form-label">Severity Level</label>
+          <label class="form-label">Severity Level <span class="req">*</span></label>
           <select id="issueSeverity" class="modal-input">
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
+            <option value="low">🟢 Low — Minor inconvenience</option>
+            <option value="medium">🟡 Medium — Needs attention soon</option>
+            <option value="high">🔴 High — Critical / Immediate action needed</option>
           </select>
         </div>
         <div class="form-group">
           <label class="form-label">Description</label>
-          <textarea id="issueDescription" class="modal-textarea" placeholder="Describe the issue in detail…"></textarea>
+          <textarea id="issueDescription" class="modal-textarea" placeholder="Describe the issue in detail — what is broken, how it affects people, estimated duration…"></textarea>
         </div>
         <div class="form-group">
-          <label class="form-label">Location (Latitude, Longitude)</label>
+          <label class="form-label">GPS Co-ordinates <span style="color:var(--text-light);font-weight:400;">(auto-filled)</span></label>
           <div class="loc-row">
             <input type="number" id="issueLat" step="any" placeholder="16.70" class="modal-input">
             <input type="number" id="issueLng" step="any" placeholder="74.24" class="modal-input">
@@ -640,21 +656,14 @@ function generateSimulatedIssues(){
   });
 }
 
-// ── STORAGE ──
-function userKey(){return`reports_${currentUser}`;}
-function getUserReports(){try{return JSON.parse(localStorage.getItem(userKey())||'[]');}catch(e){return[];}}
-function saveUserReports(r){localStorage.setItem(userKey(),JSON.stringify(r));updateBadge();}
+// ── STORAGE (shared infraReports for authority sync) ──
+function getInfraReports(){try{return JSON.parse(localStorage.getItem('infraReports')||'[]');}catch(e){return[];}}
+function saveInfraReports(r){localStorage.setItem('infraReports',JSON.stringify(r));}
+function getUserReports(){return getInfraReports().filter(r=>r.user===currentUser);}
+function saveUserReports(r){ /* legacy compat – no-op, we write directly to infraReports */ }
 function updateBadge(){
   const n=getUserReports().length, b=document.getElementById('reportsBadge');
   b.textContent=n; b.classList.toggle('vis',n>0);
-}
-function deleteReport(id){
-  saveUserReports(getUserReports().filter(r=>r.id!==id));
-  allIssues=allIssues.filter(r=>r.id!==id); renderReports();
-}
-function clearAllReports(){
-  if(!confirm('Delete all your reports? This cannot be undone.')) return;
-  saveUserReports([]); allIssues=generateSimulatedIssues(); renderReports();
 }
 
 // ── REPORTS RENDER ──
@@ -665,39 +674,42 @@ function renderReports(){
   if(ft!=='all') reps=reps.filter(r=>r.infrastructureType===ft);
   if(fs!=='all') reps=reps.filter(r=>r.severity===fs);
   const total=getUserReports().length;
-  document.getElementById('reportsSubtitle').textContent=`${currentUser} · ${total} report${total!==1?'s':''} submitted`;
+  document.getElementById('reportsSubtitle').textContent=currentUser+' · '+total+' report'+(total!==1?'s':'')+' submitted';
   if(reps.length===0){
-    c.innerHTML=`<div class="empty-state">
-      <svg style="width:56px;height:56px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z"/>
-      </svg>
-      <p>No reports found</p>
-      <small>${total===0?'Submit your first report using the button above.':'Try adjusting your filters.'}</small>
-    </div>`; return;
+    c.innerHTML='<div class="empty-state"><svg style="width:56px;height:56px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z"/></svg><p>No reports found</p><small>'+(total===0?'Submit your first report using the "Report Issue" button above.':'Try adjusting your filters.')+'</small></div>';
+    return;
   }
-  c.innerHTML=[...reps].reverse().map(r=>{
-    const isH=r.infrastructureType==='hospital';
-    const date=r.timestamp?new Date(r.timestamp).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'Unknown time';
-    return`<div class="report-card">
-      <div class="rc-icon ${isH?'h':'s'}">
-        <svg fill="none" stroke="${isH?'var(--red-gov)':'var(--green)'}" viewBox="0 0 24 24" stroke-width="2">
-          ${isH?'<path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>'
-          :'<path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>'}
-        </svg>
-      </div>
-      <div class="rc-body">
-        <div class="rc-title">${r.title||r.type}</div>
-        <div class="rc-meta">
-          <span class="sev-pill ${r.severity}">${r.severity.toUpperCase()}</span>
-          <span class="type-tag ${isH?'h':'s'}">${isH?'🏥 Hospital':'🏫 School'}</span>
-          <span>📍 ${r.lat?r.lat.toFixed(4):'—'}, ${r.lng?r.lng.toFixed(4):'—'}</span>
-          <span>🕐 ${date}</span>
-        </div>
-      </div>
-      <button class="del-btn" onclick="deleteReport('${r.id}')" title="Delete report">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
-      </button>
-    </div>`;
+  c.innerHTML=[...reps].reverse().map(function(r){
+    var isH=r.infrastructureType==='hospital';
+    var isR=r.infrastructureType==='road';
+    var date=r.timestamp?new Date(r.timestamp).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'Unknown time';
+    var isCompleted=r.status==='completed';
+    var statusHtml=isCompleted
+      ?'<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:700;background:rgba(19,136,8,.1);color:#0a6804;border:1px solid rgba(19,136,8,.25);">&#10004; Completed</span>'
+      :'<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:700;background:rgba(255,153,51,.1);color:#b35900;border:1px solid rgba(255,153,51,.25);">&#8987; Pending</span>';
+    var iconColor=isH?'var(--red-gov)':isR?'#7d5a00':'var(--green)';
+    var iconClass=isH?'h':'s';
+    var iconSvg=isH
+      ?'<path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>'
+      :'<path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0112 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>';
+    var infraLabel=isH?'&#127973; Hospital':isR?'&#128739; Road':'&#127979; School';
+    var borderColor=isCompleted?'var(--green)':'var(--saffron)';
+    return '<div class="report-card" style="border-left:3px solid '+borderColor+';">'
+      +'<div class="rc-icon '+iconClass+'">'
+      +'<svg fill="none" stroke="'+(isCompleted?'var(--green)':iconColor)+'" viewBox="0 0 24 24" stroke-width="2">'+iconSvg+'</svg>'
+      +'</div>'
+      +'<div class="rc-body">'
+      +'<div class="rc-title">'+(r.title||r.type)+'</div>'
+      +(r.description?'<div style="font-size:12px;color:var(--text-light);margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+r.description+'</div>':'')
+      +'<div class="rc-meta">'
+      +'<span class="sev-pill '+r.severity+'">'+r.severity.toUpperCase()+'</span>'
+      +'<span class="type-tag '+iconClass+'">'+infraLabel+'</span>'
+      +(r.location?'<span>&#128205; '+r.location+'</span>':'')
+      +'<span>&#128336; '+date+'</span>'
+      +statusHtml
+      +'</div>'
+      +'</div>'
+      +'</div>';
   }).join('');
 }
 
@@ -833,7 +845,7 @@ document.getElementById('locateUser').addEventListener('click',()=>{
 });
 
 // ── MODAL ──
-let allIssues=[...generateSimulatedIssues(),...(getUserReports()||[])];
+let allIssues=[...generateSimulatedIssues(),...getUserReports()];
 document.getElementById('reportIssueBtn').addEventListener('click',()=>{
   document.getElementById('issueLat').value=currentCenter[0].toFixed(4);
   document.getElementById('issueLng').value=currentCenter[1].toFixed(4);
@@ -845,18 +857,27 @@ document.getElementById('reportModal').addEventListener('click',e=>{
 });
 
 async function submitReport(){
-  const type=document.getElementById('issueType').value; if(!type){showToast('Please select an issue type','error');return;}
-  const inst=document.getElementById('issueInstitution').value.trim();
+  const title=document.getElementById('issueTitle').value.trim();
+  if(!title){showToast('Please enter a report title','error');return;}
+  const type=document.getElementById('issueType').value; if(!type){showToast('Please select an infrastructure type','error');return;}
   const sev=document.getElementById('issueSeverity').value;
-  const desc=document.getElementById('issueDescription').value.trim()||type;
+  const desc=document.getElementById('issueDescription').value.trim();
+  const location=document.getElementById('issueLocation').value.trim();
   const lat=parseFloat(document.getElementById('issueLat').value)||currentCenter[0];
   const lng=parseFloat(document.getElementById('issueLng').value)||currentCenter[1];
-  const newIssue={id:`issue-${Date.now()}`,lat,lng,severity:sev,type,description:desc,
-    infrastructureType:HOSPITAL_ISSUES.includes(type)?'hospital':'school',
-    title:inst?`${type} — ${inst}`:type, user:currentUser, city:currentCity, timestamp:new Date().toISOString()};
-  const existing=getUserReports(); existing.push(newIssue); saveUserReports(existing);
+  const infraType=type==='hospital'?'hospital':type==='school'?'school':'road';
+  const newIssue={
+    id:`issue-${Date.now()}`,lat,lng,severity:sev,
+    type:title,description:desc,infrastructureType:infraType,
+    title:title,location:location||currentCity,
+    user:currentUser,city:currentCity,
+    timestamp:new Date().toISOString(),status:'pending'
+  };
+  // Save to shared infraReports storage
+  const all=getInfraReports(); all.push(newIssue); saveInfraReports(all);
+  updateBadge();
   if(supabaseClient){
-    try{await supabaseClient.from("reports").insert([{user_email:currentUser,issue_type:type,institution:inst,severity:sev,description:desc,lat,lng,city:currentCity}]);}catch(e){}
+    try{await supabaseClient.from("reports").insert([{user_email:currentUser,issue_type:title,severity:sev,description:desc,lat,lng,city:currentCity}]);}catch(e){}
   }
   allIssues.push(newIssue); renderIssues(allIssues);
   document.getElementById('reportForm').reset();
@@ -883,11 +904,103 @@ function logout(){
 }
 
 // ── BOOT ──
+// Auto-refresh reports when authority marks complete (storage event from same-origin)
+window.addEventListener('storage',function(e){
+  if(e.key==='infraReports'){
+    allIssues=[...generateSimulatedIssues(),...getUserReports()];
+    renderIssues(allIssues); updateBadge();
+    if(document.getElementById('reportsView').style.display!=='none') renderReports();
+  }
+});
 try{
   loadInfrastructure('kolhapur'); renderIssues(allIssues); updateBadge();
   setTimeout(()=>map.invalidateSize(),300);
   setTimeout(()=>showToast('Welcome, '+currentUser.split('@')[0]+'! Monitoring active.','success'),800);
 }catch(e){console.error('Boot error:',e);}
+
+// ── LOCATION AUTO-DETECT ──
+let _detectTimer = null;
+
+function scheduleDetect() {
+  clearTimeout(_detectTimer);
+  const place = document.getElementById("issueLocation").value.trim();
+  if (!place) {
+    document.getElementById("locStatus").textContent = "";
+    document.getElementById("locOk").style.display = "none";
+    return;
+  }
+  document.getElementById("locStatus").textContent = "Waiting for you to finish typing…";
+  _detectTimer = setTimeout(() => detectLocation(), 900);
+}
+
+async function detectLocation() {
+  clearTimeout(_detectTimer);
+  const place = document.getElementById("issueLocation").value.trim();
+  if (!place) return;
+
+  const spinner = document.getElementById("locSpinner");
+  const okIcon  = document.getElementById("locOk");
+  const status  = document.getElementById("locStatus");
+  const latEl   = document.getElementById("issueLat");
+  const lngEl   = document.getElementById("issueLng");
+
+  // Show loading state
+  spinner.style.display = "inline-block";
+  okIcon.style.display  = "none";
+  status.textContent    = "Looking up coordinates…";
+  status.style.color    = "var(--text-light)";
+
+  try {
+    const res  = await fetch(
+      "https://nominatim.openstreetmap.org/search?format=json&limit=1&q=" +
+      encodeURIComponent(place)
+    );
+    const data = await res.json();
+
+    if (data.length > 0) {
+      const lat = parseFloat(data[0].lat);
+      const lon = parseFloat(data[0].lon);
+      const displayName = data[0].display_name.split(",").slice(0,3).join(", ");
+
+      // Fill coords
+      latEl.value = lat.toFixed(6);
+      lngEl.value = lon.toFixed(6);
+
+      // Flash coord fields green
+      [latEl, lngEl].forEach(el => {
+        el.style.animation = "none";
+        el.offsetHeight; // reflow
+        el.style.animation = "coordFlash .7s ease";
+      });
+
+      // Move map & place marker
+      map.setView([lat, lon], 15);
+      userLayer.clearLayers();
+      L.marker([lat, lon], {
+        icon: L.divIcon({
+          className: '',
+          html: `<div style="width:16px;height:16px;background:var(--saffron);border:2.5px solid white;border-radius:50%;box-shadow:0 2px 10px rgba(255,153,51,.5);"></div>`,
+          iconSize: [20, 20], iconAnchor: [10, 10]
+        })
+      }).bindPopup(`<strong style="color:var(--navy);">📍 ${place}</strong><br><small style="color:var(--text-light);">${displayName}</small>`).addTo(userLayer).openPopup();
+
+      // UI success state
+      spinner.style.display = "none";
+      okIcon.style.display  = "inline-block";
+      status.textContent    = `📍 Found: ${displayName}`;
+      status.style.color    = "var(--green)";
+    } else {
+      spinner.style.display = "none";
+      okIcon.style.display  = "none";
+      status.textContent    = "⚠️ Location not found. Try a more specific name.";
+      status.style.color    = "var(--red-gov)";
+    }
+  } catch(err) {
+    spinner.style.display = "none";
+    status.textContent    = "⚠️ Could not reach geocoding service.";
+    status.style.color    = "var(--red-gov)";
+  }
+}
 </script>
 </body>
 </html>
