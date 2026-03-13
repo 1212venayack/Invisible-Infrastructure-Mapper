@@ -160,7 +160,56 @@
 
 <div class="flex min-h-screen">
 
-  
+  <!-- ===== SIDEBAR ===== -->
+    <aside class="w-64 glass-card border-r border-white/10 flex flex-col fixed h-full z-20">
+        <div class="p-6 border-b border-white/10">
+            <h1 class="text-xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">Smart City</h1>
+            <p class="text-xs text-slate-400 mt-1">Infrastructure Monitor</p>
+        </div>
+
+        <nav class="flex-1 p-4 space-y-1">
+            <!-- Dashboard -->
+            <button id="navDashboard" onclick="showView('dashboard')" class="sidebar-nav-item active">
+                <svg class="w-5 h-5 text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/>
+                </svg>
+                <span>Dashboard</span>
+            </button>
+
+            <!-- Reports with badge -->
+            <button id="navReports" onclick="showView('reports')" class="sidebar-nav-item">
+                <svg class="w-5 h-5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z"/>
+                </svg>
+                <span>My Reports</span>
+                <span id="reportsBadge" class="report-badge">0</span>
+            </button>
+        </nav>
+
+        <!-- User info + Live indicator -->
+        <div class="p-4 border-t border-white/10 space-y-3">
+            <!-- Logged-in user pill -->
+            <div class="glass-card rounded-xl p-3 flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-blue-500/30 flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
+                    </svg>
+                </div>
+                <div class="overflow-hidden">
+                    <p class="text-xs text-slate-400">Logged in as</p>
+                    <p id="sidebarUserEmail" class="text-xs font-medium text-slate-200 truncate">—</p>
+                </div>
+            </div>
+            <div class="glass-card rounded-xl p-3">
+                <p class="text-xs text-slate-400">Kolhapur, Maharashtra</p>
+                <p class="text-sm font-medium">Monitoring Active</p>
+                <div class="flex gap-1 mt-1">
+                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                    <span class="text-xs text-slate-400">Live</span>
+                </div>
+            </div>
+        </div>
+    </aside>
 
         <!-- User info + Live indicator -->
         <div class="p-4 border-t border-white/10 space-y-3">
