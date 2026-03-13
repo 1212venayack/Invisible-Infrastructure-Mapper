@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart City - Infrastructure Risk Detection</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            min-height: 100vh;
+        }
+        .glass-card {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .glass-card-hover:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(255,255,255,0.15);
+        }
+        .sidebar-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            transition: all 0.2s;
+            color: #cbd5e1;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        .sidebar-nav-item:hover { background: rgba(255,255,255,0.08); color: #f1f5f9; }
+        .sidebar-nav-item.active { background: rgba(255,255,255,0.12); color: #f1f5f9; }
+
+        /* MAP */
+        #map {
+            height: 600px;
+            width: 100%;
+            border-radius: 12px;
+            z-index: 1;
+        }
+        .leaflet-popup-content-wrapper {
+            background: rgba(15,23,42,0.97) !important;
+            border: 1px solid rgba(255,255,255,0.12) !important;
+            border-radius: 12px !important;
+            color: #f1f5f9 !important;
+        }
+        .leaflet-popup-tip { background: rgba(15,23,42,0.97) !important; }
+        .leaflet-control-layers { border: none !important; }
+        .leaflet-control-layers-expanded {
+            background: rgba(15,23,42,0.97) !important;
+            border: 1px solid rgba(255,255,255,0.1) !important;
+            border-radius: 12px !important;
+            padding: 8px 12px !important;
+            color: #f1f5f9 !important;
+        }
+        .leaflet-control-layers label { color: #e2e8f0 !important; margin: 4px 0 !important; }
+
+        @keyframes pulse-glow {
+            0%,100% { box-shadow: 0 0 20px rgba(59,130,246,0.3); }
+            50%      { box-shadow: 0 0 30px rgba(59,130,246,0.5); }
+        }
+        .stat-card { animation: pulse-glow 3s ease-in-out infinite; }
+
+        .risk-critical { background: linear-gradient(135deg,#ef4444,#dc2626); color:#fff; padding:2px 10px; border-radius:6px; font-size:11px; font-weight:600; }
+        .risk-medium   { background: linear-gradient(135deg,#f97316,#ea580c); color:#fff; padding:2px 10px; border-radius:6px; font-size:11px; font-weight:600; }
+        .risk-low      { background: linear-gradient(135deg,#22c55e,#16a34a); color:#fff; padding:2px 10px; border-radius:6px; font-size:11px; font-weight:600; }
+
+        .map-legend {
+            background: rgba(15,23,42,0.97) !important;
+            border: 1px solid rgba(255,255,255,0.1) !important;
+            border-radius: 12px !important;
+            padding: 10px 14px !important;
+            font-size: 12px !important;
+            color: #e2e8f0;
+        }
+        .map-legend h4 { margin:0 0 8px 0; color:#f1f5f9; font-size:11px; text-transform:uppercase; letter-spacing:0.5px; }
+        .map-legend-item { display:flex; align-items:center; gap:8px; margin:4px 0; }
+        .map-legend-dot { width:14px; height:14px; border-radius:4px; flex-shrink:0; }
+        .map-legend-dot.hospital { background:#dc2626; }
+        .map-legend-dot.school   { background:#16a34a; }
+
+        select#citySelector {
+            background: #1e293b;
+            border: 1px solid rgba(255,255,255,0.25);
+            color: #f1f5f9;
+            border-radius: 12px;
+            padding: 8px 12px;
+            font-size: 14px;
+            cursor: pointer;
+            outline: none;
+        }
+        select#citySelector option { background:#1e293b; color:#f1f5f9; }
+
+        /* Report badge */
+        .report-badge {
+            background: #3b82f6;
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+            border-radius: 999px;
+            padding: 1px 7px;
+            margin-left: auto;
+            display: none;
+        }
+        .report-badge.visible { display: inline-block; }
+
+        /* Reports panel */
+        #reportsView { display: none; }
+        #dashboardView { display: block; }
+
+        /* Report card */
+        .report-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px;
+            padding: 16px;
+            transition: all 0.2s;
+        }
+        .report-card:hover {
+            background: rgba(255,255,255,0.07);
+            border-color: rgba(255,255,255,0.14);
+        }
+        .sev-high   { background: rgba(239,68,68,0.15);  color:#fca5a5; border:1px solid rgba(239,68,68,0.3);  padding:2px 10px; border-radius:6px; font-size:11px; font-weight:600; }
+        .sev-medium { background: rgba(249,115,22,0.15); color:#fdba74; border:1px solid rgba(249,115,22,0.3); padding:2px 10px; border-radius:6px; font-size:11px; font-weight:600; }
+        .sev-low    { background: rgba(34,197,94,0.15);  color:#86efac; border:1px solid rgba(34,197,94,0.3);  padding:2px 10px; border-radius:6px; font-size:11px; font-weight:600; }
+
+        /* Scrollable report list */
+        .reports-scroll { max-height: calc(100vh - 220px); overflow-y: auto; padding-right: 4px; }
+        .reports-scroll::-webkit-scrollbar { width: 5px; }
+        .reports-scroll::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); border-radius:4px; }
+        .reports-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius:4px; }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+        }
+        .empty-state svg { margin: 0 auto 16px; opacity: 0.4; }
+    </style>
+</head>
+<body class="text-slate-100 antialiased">
+
+<div class="flex min-h-screen">
+
+  
+
+        <!-- User info + Live indicator -->
+        <div class="p-4 border-t border-white/10 space-y-3">
+            <!-- Logged-in user pill -->
+            <div class="glass-card rounded-xl p-3 flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-blue-500/30 flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
+                    </svg>
+                </div>
+                <div class="overflow-hidden">
+                    <p class="text-xs text-slate-400">Logged in as</p>
+                    <p id="sidebarUserEmail" class="text-xs font-medium text-slate-200 truncate">—</p>
+                </div>
+            </div>
+            <div class="glass-card rounded-xl p-3">
+                <p class="text-xs text-slate-400">Kolhapur, Maharashtra</p>
+                <p class="text-sm font-medium">Monitoring Active</p>
+                <div class="flex gap-1 mt-1">
+                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                    <span class="text-xs text-slate-400">Live</span>
+                </div>
+            </div>
+        </div>
+    </aside>
+    <!-- ===== MAIN ===== -->
+    <main class="flex-1 ml-64 p-6">
+
+        <!-- Shared header -->
+        <header class="glass-card rounded-2xl px-6 py-4 mb-6 flex items-center gap-4 flex-wrap">
+            <label class="text-sm text-slate-400">City</label>
+            <select id="citySelector">
+                <option value="kolhapur">Kolhapur</option>
+                <option value="pune">Pune</option>
+                <option value="satara">Satara</option>
+                <option value="sangli">Sangli</option>
+            </select>
+            <div class="flex items-center gap-3 ml-auto flex-wrap">
+                <button id="reportIssueBtn" class="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl font-medium transition-colors text-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                    Report Issue
+                </button>
+                <button onclick="logout()" class="px-4 py-2.5 bg-red-600 hover:bg-red-500 rounded-xl font-medium transition-colors text-sm">Logout</button>
+                <button class="relative p-2 rounded-xl glass-card hover:bg-white/10 transition-colors">
+                    <svg class="w-6 h-6 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                    </svg>
+                    <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                </button>
+            </div>
+        </header>
+
+        <!-- ===== DASHBOARD VIEW ===== -->
+        <div id="dashboardView">
+            <!-- Stat Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div class="glass-card glass-card-hover rounded-2xl p-5 stat-card">
+                    <div class="flex items-center justify-between">
+                        <div><p class="text-slate-400 text-sm">Total Issues</p><p id="statTotalIssues" class="text-3xl font-bold mt-1">0</p></div>
+                        <div class="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-card glass-card-hover rounded-2xl p-5">
+                    <div class="flex items-center justify-between">
+                        <div><p class="text-slate-400 text-sm">Hospitals at Risk</p><p id="statHospitalsAtRisk" class="text-3xl font-bold mt-1 text-red-400">0</p></div>
+                        <div class="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-card glass-card-hover rounded-2xl p-5">
+                    <div class="flex items-center justify-between">
+                        <div><p class="text-slate-400 text-sm">Schools at Risk</p><p id="statSchoolsAtRisk" class="text-3xl font-bold mt-1 text-amber-400">0</p></div>
+                        <div class="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/></svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-card glass-card-hover rounded-2xl p-5">
+                    <div class="flex items-center justify-between">
+                        <div><p class="text-slate-400 text-sm">High Density Issues</p><p id="statHighDensity" class="text-3xl font-bold mt-1 text-orange-400">0</p></div>
+                        <div class="w-12 h-12 rounded-xl bg-orange-500/20 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/></svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Map -->
+            <div class="glass-card rounded-2xl p-4">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 id="mapTitle" class="font-semibold text-lg">Infrastructure Risk Map — Kolhapur</h2>
+                    <div class="flex gap-2">
+                        <button id="toggleHeatmap" class="px-3 py-1.5 rounded-lg bg-orange-500/20 text-orange-400 text-sm hover:bg-orange-500/30 transition-colors">Hide Heatmap</button>
+                        <button id="locateUser"    class="px-3 py-1.5 rounded-lg glass-card text-sm hover:bg-white/10 transition-colors">My Location</button>
+                    </div>
+                </div>
+                <div id="map"></div>
+            </div>
+        </div>
+
+        <!-- ===== REPORTS VIEW ===== -->
+        <div id="reportsView">
+            <div class="glass-card rounded-2xl p-6 mb-4 flex items-center justify-between">
+                <div>
+                    <h2 class="text-xl font-bold">My Report History</h2>
+                    <p id="reportsSubtitle" class="text-sm text-slate-400 mt-0.5">Showing all reports submitted by you</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <!-- Filter by type -->
+                    <select id="filterType" onchange="renderReports()" style="background:#1e293b;border:1px solid rgba(255,255,255,0.2);color:#f1f5f9;border-radius:10px;padding:7px 12px;font-size:13px;outline:none;cursor:pointer;">
+                        <option value="all">All Types</option>
+                        <option value="hospital">🏥 Hospital</option>
+                        <option value="school">🏫 School</option>
+                    </select>
+                    <!-- Filter by severity -->
+                    <select id="filterSeverity" onchange="renderReports()" style="background:#1e293b;border:1px solid rgba(255,255,255,0.2);color:#f1f5f9;border-radius:10px;padding:7px 12px;font-size:13px;outline:none;cursor:pointer;">
+                        <option value="all">All Severity</option>
+                        <option value="high">High</option>
+                        <option value="medium">Medium</option>
+                        <option value="low">Low</option>
+                    </select>
+                    <button onclick="clearAllReports()" class="px-3 py-2 rounded-xl bg-red-500/15 text-red-400 text-sm hover:bg-red-500/25 transition-colors border border-red-500/20">
+                        Clear All
+                    </button>
+                </div>
+            </div>
+
+            <div id="reportsContainer" class="reports-scroll space-y-3"></div>
+        </div>
+
+    </main>
+</div>
+
+<!-- ===== REPORT MODAL ===== -->
+<div id="reportModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div class="glass-card rounded-2xl w-full max-w-lg p-6 shadow-2xl">
+        <div class="flex items-center justify-between mb-5">
+            <div>
+                <h3 class="text-xl font-semibold">Report School or Hospital Issue</h3>
+                <p class="text-xs text-slate-400 mt-1">Your report will be saved to your account</p>
+            </div>
+            <button id="closeModal" class="p-2 rounded-lg hover:bg-white/10 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <form id="reportForm" class="space-y-4">
+            <div>
+                <label class="block text-sm text-slate-400 mb-2">Issue Type <span class="text-red-400">*</span></label>
+                <select id="issueType" required style="background:#1e293b;border:1px solid rgba(255,255,255,0.15);color:#f1f5f9;border-radius:12px;padding:10px 14px;width:100%;outline:none;font-family:inherit;">
+                    <option value="">Select issue type...</option>
+                    <optgroup label="🏥 Hospital Related">
+                        <option value="Water leakage in hospital building">Water leakage in hospital building</option>
+                        <option value="Power outage in hospital ICU">Power outage in hospital ICU</option>
+                        <option value="Broken ambulance access road">Broken ambulance access road</option>
+                        <option value="Oxygen supply system failure">Oxygen supply system failure</option>
+                        <option value="Emergency entrance blockage">Emergency entrance blockage</option>
+                    </optgroup>
+                    <optgroup label="🏫 School Related">
+                        <option value="Broken water pipeline in school campus">Broken water pipeline in school campus</option>
+                        <option value="Electricity failure in classrooms">Electricity failure in classrooms</option>
+                        <option value="Unsafe road near school entrance">Unsafe road near school entrance</option>
+                        <option value="Street light failure near school area">Street light failure near school area</option>
+                        <option value="Drainage overflow near school building">Drainage overflow near school building</option>
+                    </optgroup>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm text-slate-400 mb-2">Institution Name <span class="text-slate-500">(optional)</span></label>
+                <input type="text" id="issueInstitution" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#f1f5f9;border-radius:12px;padding:10px 14px;width:100%;outline:none;font-family:inherit;" placeholder="e.g., C.P.R. Hospital, Rajaram College">
+            </div>
+            <div>
+                <label class="block text-sm text-slate-400 mb-2">Severity Level</label>
+                <select id="issueSeverity" style="background:#1e293b;border:1px solid rgba(255,255,255,0.15);color:#f1f5f9;border-radius:12px;padding:10px 14px;width:100%;outline:none;font-family:inherit;">
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm text-slate-400 mb-2">Description</label>
+                <textarea id="issueDescription" rows="3" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#f1f5f9;border-radius:12px;padding:10px 14px;width:100%;outline:none;resize:none;font-family:inherit;" placeholder="Describe the issue in detail..."></textarea>
+            </div>
+            <div>
+                <label class="block text-sm text-slate-400 mb-2">Location (Lat, Lng)</label>
+                <div class="flex gap-2">
+                    <input type="number" id="issueLat" step="any" placeholder="16.70" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#f1f5f9;border-radius:12px;padding:10px 14px;flex:1;outline:none;font-family:inherit;">
+                    <input type="number" id="issueLng" step="any" placeholder="74.24" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#f1f5f9;border-radius:12px;padding:10px 14px;flex:1;outline:none;font-family:inherit;">
+                </div>
+            </div>
+            <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-500 rounded-xl font-medium transition-colors">Submit Report</button>
+        </form>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+/* leaflet.heat inlined — avoids CDN failures */
+(function(factory,window){if(typeof define==='function'&&define.amd){define(['leaflet'],factory);}else if(typeof exports==='object'){module.exports=factory(require('leaflet'));}else{if(typeof window!=='undefined'&&window.L){factory(window.L);}}}(function(L){var simpleheat=function(canvas){if(!(this instanceof simpleheat))return new simpleheat(canvas);this._canvas=canvas=typeof canvas==='string'?document.getElementById(canvas):canvas;this._ctx=canvas.getContext('2d');this._width=canvas.width;this._height=canvas.height;this._max=1;this._data=[];};simpleheat.prototype={defaultRadius:25,defaultGradient:{0.4:'blue',0.6:'cyan',0.7:'lime',0.8:'yellow',1.0:'red'},data:function(data){this._data=data;return this;},max:function(max){this._max=max;return this;},add:function(point){this._data.push(point);return this;},clear:function(){this._data=[];return this;},radius:function(r,blur){blur=blur===undefined?15:blur;var circle=this._circle=this._createCanvas(),ctx=circle.getContext('2d'),r2=this._r=r+blur;circle.width=circle.height=r2*2;ctx.shadowOffsetX=ctx.shadowOffsetY=r2*2;ctx.shadowBlur=blur;ctx.shadowColor='black';ctx.beginPath();ctx.arc(-r2,0,r,0,Math.PI*2,true);ctx.closePath();ctx.fill();return this;},resize:function(){this._width=this._canvas.width;this._height=this._canvas.height;},gradient:function(grad){var canvas=this._createCanvas(),ctx=canvas.getContext('2d'),gradient=ctx.createLinearGradient(0,0,0,256);canvas.width=1;canvas.height=256;for(var i in grad){gradient.addColorStop(+i,grad[i]);}ctx.fillStyle=gradient;ctx.fillRect(0,0,1,256);this._grad=ctx.getImageData(0,0,1,256).data;return this;},draw:function(minOpacity){if(!this._circle)this.radius(this.defaultRadius);if(!this._grad)this.gradient(this.defaultGradient);var ctx=this._ctx;ctx.clearRect(0,0,this._width,this._height);for(var i=0,len=this._data.length,p;i<len;i++){p=this._data[i];ctx.globalAlpha=Math.min(Math.max(p[2]/this._max,minOpacity===undefined?0.05:minOpacity),1);ctx.drawImage(this._circle,p[0]-this._r,p[1]-this._r);}var colored=ctx.getImageData(0,0,this._width,this._height);this._colorize(colored.data,this._grad);ctx.putImageData(colored,0,0);return this;},_colorize:function(pixels,gradient){for(var i=3,len=pixels.length,j;i<len;i+=4){j=pixels[i]*4;if(j){pixels[i-3]=gradient[j];pixels[i-2]=gradient[j+1];pixels[i-1]=gradient[j+2];}}},_createCanvas:function(){if(typeof document!=='undefined'){return document.createElement('canvas');}else{return new OffscreenCanvas(1,1);}}};L.HeatLayer=(L.Layer?L.Layer:L.Class).extend({initialize:function(latlngs,options){this._latlngs=latlngs;L.setOptions(this,options);},setLatLngs:function(latlngs){this._latlngs=latlngs;return this.redraw();},addLatLng:function(latlng){this._latlngs.push(latlng);return this.redraw();},setOptions:function(options){L.setOptions(this,options);if(this._heat){this._updateOptions();}return this.redraw();},redraw:function(){if(this._heat&&!this._frame&&this._map&&!this._map._animating){this._frame=L.Util.requestAnimFrame(this._redraw,this);}return this;},onAdd:function(map){this._map=map;if(!this._canvas){this._initCanvas();}if(this.options.pane){this.getPane().appendChild(this._canvas);}else{map._panes.overlayPane.appendChild(this._canvas);}map.on('moveend',this._reset,this);if(map.options.zoomAnimation&&L.Browser.any3d){map.on('zoomanim',this._animateZoom,this);}this._reset();},onRemove:function(map){if(this.options.pane){this.getPane().removeChild(this._canvas);}else{map.getPanes().overlayPane.removeChild(this._canvas);}map.off('moveend',this._reset,this);if(map.options.zoomAnimation){map.off('zoomanim',this._animateZoom,this);}},addTo:function(map){map.addLayer(this);return this;},_initCanvas:function(){var canvas=this._canvas=L.DomUtil.create('canvas','leaflet-heatmap-layer leaflet-layer');var originProp=L.DomUtil.testProp(['transformOrigin','WebkitTransformOrigin','msTransformOrigin']);canvas.style[originProp]='50% 50%';var size=this._map.getSize();canvas.width=size.x;canvas.height=size.y;var animated=this._map.options.zoomAnimation&&L.Browser.any3d;L.DomUtil.addClass(canvas,'leaflet-zoom-'+(animated?'animated':'hide'));this._heat=simpleheat(canvas);this._updateOptions();},_updateOptions:function(){this._heat.radius(this.options.radius||this._heat.defaultRadius,this.options.blur);if(this.options.gradient){this._heat.gradient(this.options.gradient);}if(this.options.max){this._heat.max(this.options.max);}},_reset:function(){var topLeft=this._map.containerPointToLayerPoint([0,0]);L.DomUtil.setPosition(this._canvas,topLeft);var size=this._map.getSize();if(this._heat._width!==size.x){this._canvas.width=this._heat._width=size.x;}if(this._heat._height!==size.y){this._canvas.height=this._heat._height=size.y;}this._redraw();},_redraw:function(){var r=this._heat._r,size=this._map.getSize(),bounds=new L.Bounds(L.point([-r,-r]),size.add([r,r])),max=this._options&&this._options.max||1,maxZoom=this._options&&this._options.maxZoom||this._map.getMaxZoom(),v=1/Math.pow(2,Math.max(0,Math.min(maxZoom-this._map.getZoom(),12))),cellSize=r/2,grid=[],panePos=this._map._getMapPanePos(),offsetX=panePos.x%cellSize,offsetY=panePos.y%cellSize,i,len,latlng,point,cell,x,y,j,len2,data=[];for(i=0,len=this._latlngs.length;i<len;i++){latlng=this._latlngs[i];point=this._map.latLngToContainerPoint(latlng);x=Math.floor((point.x-offsetX)/cellSize)+2;y=Math.floor((point.y-offsetY)/cellSize)+2;var alt=latlng.alt!==undefined?latlng.alt:latlng[2]!==undefined?+latlng[2]:1;k=alt*v;grid[y]=grid[y]||[];cell=grid[y][x];if(!cell){grid[y][x]=[point.x,point.y,k];data.push(grid[y][x]);}else{cell[0]=(cell[0]*cell[2]+point.x*k)/(cell[2]+k);cell[1]=(cell[1]*cell[2]+point.y*k)/(cell[2]+k);cell[2]+=k;}}this._heat.data(data).draw(this.options.minOpacity);this._frame=null;},_animateZoom:function(e){var scale=this._map.getZoomScale(e.zoom),offset=this._map._getCenterOffset(e.center)._multiplyBy(-scale).subtract(this._map._getMapPanePos());if(L.DomUtil.setTransform){L.DomUtil.setTransform(this._canvas,offset,scale);}else{this._canvas.style[L.DomUtil.TRANSFORM]=L.DomUtil.getTranslateString(offset)+' scale('+scale+')';}}}); L.heatLayer=function(latlngs,options){return new L.HeatLayer(latlngs,options);};return L.HeatLayer;},window));
+</script>
+<script>
+    const supabaseUrl = "https://zghhpmdhswxprddzlqga.supabase.co";
+const supabaseKey = "PASTE_YOUR_SUPABASE_ANON_KEY_HERE"; // ⚠️ Same key as in index.html — from Supabase Dashboard → Settings → API
+
+let supabaseClient = null;
+try {
+    supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+} catch(e) {
+    console.warn("Supabase init failed — running in offline/localStorage mode:", e.message);
+}
+
+// ===== CONSTANTS =====
+const KOLHAPUR_CENTER = [16.7050, 74.2433];
+const MAP_ZOOM = 13;
+const INFRA_WEIGHTS   = { hospital:10, school:8 };
+const SEVERITY_LEVELS = { low:2, medium:4, high:6 };
+
+const HOSPITAL_ISSUES = [
+    'Water leakage in hospital building','Power outage in hospital ICU',
+    'Broken ambulance access road','Oxygen supply system failure','Emergency entrance blockage'
+];
+const SCHOOL_ISSUES = [
+    'Broken water pipeline in school campus','Electricity failure in classrooms',
+    'Unsafe road near school entrance','Street light failure near school area',
+    'Drainage overflow near school building'
+];
+
+const cityCenters = {
+    kolhapur:[16.7050,74.2433], pune:[18.5204,73.8567],
+    satara:[17.6885,73.9983],   sangli:[16.8531,74.5659]
+};
+
+const CITY_INFRASTRUCTURE = {
+    kolhapur:[
+        {lat:16.6980,lng:74.2380,name:'C.P.R. Hospital',type:'hospital'},
+        {lat:16.7120,lng:74.2500,name:'Chhatrapati Pramila Raje Hospital',type:'hospital'},
+        {lat:16.6950,lng:74.2280,name:'Eye Hospital Kolhapur',type:'hospital'},
+        {lat:16.7180,lng:74.2420,name:'Government Medical College',type:'hospital'},
+        {lat:16.7050,lng:74.2300,name:'Ayurved Rugnalaya Hospital',type:'hospital'},
+        {lat:16.7080,lng:74.2350,name:'Kolhapur Municipal School',type:'school'},
+        {lat:16.7000,lng:74.2550,name:'Rajaram College',type:'school'},
+        {lat:16.6920,lng:74.2450,name:'Shivaji University',type:'school'},
+        {lat:16.7020,lng:74.2220,name:'D.Y. Patil College',type:'school'},
+        {lat:16.7090,lng:74.2470,name:'New English School Kolhapur',type:'school'},
+        {lat:16.6960,lng:74.2320,name:'Balshikshan Mandir School',type:'school'},
+    ],
+    pune:[
+        {lat:18.5195,lng:73.8553,name:'Sassoon General Hospital',type:'hospital'},
+        {lat:18.5308,lng:73.8472,name:'Ruby Hall Clinic',type:'hospital'},
+        {lat:18.5074,lng:73.8077,name:'Jehangir Hospital',type:'hospital'},
+        {lat:18.5235,lng:73.8685,name:'KEM Hospital Pune',type:'hospital'},
+        {lat:18.5400,lng:73.8560,name:'Deenanath Mangeshkar Hospital',type:'hospital'},
+        {lat:18.5280,lng:73.8750,name:'Poona Hospital',type:'hospital'},
+        {lat:18.5204,lng:73.8567,name:'Fergusson College',type:'school'},
+        {lat:18.5314,lng:73.8446,name:'Symbiosis International University',type:'school'},
+        {lat:18.5089,lng:73.8259,name:'MIT College of Engineering',type:'school'},
+        {lat:18.5460,lng:73.8780,name:'Savitribai Phule Pune University',type:'school'},
+        {lat:18.5150,lng:73.8700,name:'Abhinava Vidyalaya',type:'school'},
+        {lat:18.5370,lng:73.8620,name:"Bishop's School Pune",type:'school'},
+    ],
+    satara:[
+        {lat:17.6885,lng:73.9983,name:'Civil Hospital Satara',type:'hospital'},
+        {lat:17.6940,lng:74.0050,name:'Cottage Hospital Satara',type:'hospital'},
+        {lat:17.6820,lng:73.9920,name:'Satara District Hospital',type:'hospital'},
+        {lat:17.6780,lng:74.0010,name:'Sai Multispeciality Hospital',type:'hospital'},
+        {lat:17.6900,lng:73.9870,name:'Chhatrapati Shivaji School',type:'school'},
+        {lat:17.6950,lng:74.0020,name:'Satara College',type:'school'},
+        {lat:17.6840,lng:73.9960,name:'New English School Satara',type:'school'},
+        {lat:17.6980,lng:74.0080,name:'Satara High School',type:'school'},
+        {lat:17.6860,lng:73.9900,name:'Yashwantrao Chavan Institute',type:'school'},
+    ],
+    sangli:[
+        {lat:16.8531,lng:74.5659,name:'Civil Hospital Sangli',type:'hospital'},
+        {lat:16.8600,lng:74.5730,name:'Wanless Hospital Miraj',type:'hospital'},
+        {lat:16.8470,lng:74.5590,name:'Sangli Government Hospital',type:'hospital'},
+        {lat:16.8560,lng:74.5680,name:'Sangli High School',type:'school'},
+        {lat:16.8490,lng:74.5620,name:'Willingdon College Sangli',type:'school'},
+        {lat:16.8620,lng:74.5760,name:'Sangli Municipal School',type:'school'},
+        {lat:16.8510,lng:74.5700,name:'Sant Gadge Maharaj Vidyalaya',type:'school'},
+    ]
+};
+
+const CITY_RANGES = {
+    pune:     {hospital:[10,14],school:[9,13], density:[3,5]},
+    satara:   {hospital:[7,10], school:[6,9],  density:[2,4]},
+    kolhapur: {hospital:[5,8],  school:[4,7],  density:[1,3]},
+    sangli:   {hospital:[2,5],  school:[2,4],  density:[1,2]}
+};
+
+// ===== STATE =====
+let currentCity   = 'kolhapur';
+let currentCenter = KOLHAPUR_CENTER.slice();
+const currentUser = localStorage.getItem('currentUser') || 'user@example.com';
+
+// Show user email in sidebar
+document.getElementById('sidebarUserEmail').textContent = currentUser;
+
+// ===== HELPERS =====
+function randomOffset(){ return (Math.random()-0.5)*0.02; }
+function rand(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+
+function generateSimulatedIssues(){
+    const allTypes=[...HOSPITAL_ISSUES,...SCHOOL_ISSUES];
+    const sevs=['low','medium','high'];
+    return Array.from({length:Math.floor(Math.random()*16)+15},(_,i)=>{
+        const type=allTypes[Math.floor(Math.random()*allTypes.length)];
+        return {
+            id:`issue-${Date.now()}-${i}`,
+            lat:currentCenter[0]+randomOffset(),
+            lng:currentCenter[1]+randomOffset(),
+            severity:sevs[Math.floor(Math.random()*3)],
+            type, description:`${type} — Requires immediate attention`,
+            infrastructureType:HOSPITAL_ISSUES.includes(type)?'hospital':'school',
+            title:type
+        };
+    });
+}
+
+// ===== REPORT STORAGE (per-user key) =====
+function userReportsKey(){ return `reports_${currentUser}`; }
+
+function getUserReports(){
+    try {
+        return JSON.parse(localStorage.getItem(userReportsKey()) || '[]');
+    } catch(e) {
+        return [];
+    }
+}
+
+async function getUserReportsFromSupabase(){
+    if(!supabaseClient) return [];
+    try {
+        let { data, error } = await supabaseClient
+            .from("reports")
+            .select("*")
+            .eq("user_email", currentUser);
+        return data || [];
+    } catch(e) {
+        return [];
+    }
+}
+function saveUserReports(reports){
+    localStorage.setItem(userReportsKey(), JSON.stringify(reports));
+    updateReportsBadge();
+}
+function updateReportsBadge(){
+    const count = getUserReports().length;
+    const badge = document.getElementById('reportsBadge');
+    badge.textContent = count;
+    badge.classList.toggle('visible', count > 0);
+}
+function deleteReport(id){
+    const reports = getUserReports().filter(r => r.id !== id);
+    saveUserReports(reports);
+    renderReports();
+    // also remove from allIssues
+    allIssues = allIssues.filter(r => r.id !== id);
+}
+function clearAllReports(){
+    if(!confirm('Delete all your reports? This cannot be undone.')) return;
+    saveUserReports([]);
+    allIssues = generateSimulatedIssues();
+    renderReports();
+}
+
+// ===== REPORTS VIEW =====
+function renderReports(){
+    const container = document.getElementById('reportsContainer');
+    const filterType = document.getElementById('filterType').value;
+    const filterSev  = document.getElementById('filterSeverity').value;
+
+    let reports = getUserReports();
+
+    // Apply filters
+    if(filterType !== 'all') reports = reports.filter(r => r.infrastructureType === filterType);
+    if(filterSev  !== 'all') reports = reports.filter(r => r.severity === filterSev);
+
+    // Subtitle
+    const total = getUserReports().length;
+    document.getElementById('reportsSubtitle').textContent =
+        `${currentUser} · ${total} report${total!==1?'s':''} submitted`;
+
+    if(reports.length === 0){
+        container.innerHTML = `
+            <div class="empty-state">
+                <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z"/>
+                </svg>
+                <p class="text-lg font-medium text-slate-500">No reports found</p>
+                <p class="text-sm text-slate-600 mt-1">${total===0 ? 'Submit your first report using the button above.' : 'Try adjusting your filters.'}</p>
+            </div>`;
+        return;
+    }
+
+    // Sort newest first
+    reports = [...reports].reverse();
+
+    container.innerHTML = reports.map(r => {
+        const isHospital = r.infrastructureType === 'hospital';
+        const date = r.timestamp ? new Date(r.timestamp).toLocaleString('en-IN',{
+            day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'
+        }) : 'Unknown time';
+
+        return `
+        <div class="report-card">
+            <div class="flex items-start justify-between gap-3">
+                <div class="flex items-start gap-3 flex-1 min-w-0">
+                    <!-- Icon -->
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${isHospital ? 'bg-red-500/20' : 'bg-green-500/20'}">
+                        <svg class="w-5 h-5 ${isHospital ? 'text-red-400' : 'text-green-400'}" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            ${isHospital
+                                ? '<path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>'
+                                : '<path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>'
+                            }
+                        </svg>
+                    </div>
+                    <!-- Content -->
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 flex-wrap mb-1">
+                            <span class="font-semibold text-sm truncate">${r.title || r.type}</span>
+                            <span class="sev-${r.severity}">${r.severity.toUpperCase()}</span>
+                            <span class="text-xs px-2 py-0.5 rounded-full ${isHospital ? 'bg-red-500/10 text-red-300' : 'bg-green-500/10 text-green-300'} border ${isHospital ? 'border-red-500/20' : 'border-green-500/20'}">
+                                ${isHospital ? '🏥 Hospital' : '🏫 School'}
+                            </span>
+                        </div>
+                        ${r.description && r.description !== r.type ? `<p class="text-xs text-slate-400 mb-2">${r.description}</p>` : ''}
+                        <div class="flex items-center gap-3 flex-wrap">
+                            <span class="text-xs text-slate-500 flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
+                                ${r.lat ? r.lat.toFixed(4) : '—'}, ${r.lng ? r.lng.toFixed(4) : '—'}
+                            </span>
+                            <span class="text-xs text-slate-500 flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                ${date}
+                            </span>
+                            <span class="text-xs text-slate-500 flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+                                ${r.user || currentUser}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Delete button -->
+                <button onclick="deleteReport('${r.id}')" class="p-2 rounded-lg hover:bg-red-500/20 text-slate-500 hover:text-red-400 transition-colors shrink-0" title="Delete report">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/>
+                    </svg>
+                </button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+// ===== VIEW SWITCHER =====
+function showView(view){
+    const dashboard = document.getElementById('dashboardView');
+    const reports   = document.getElementById('reportsView');
+    const navD = document.getElementById('navDashboard');
+    const navR = document.getElementById('navReports');
+
+    if(view === 'reports'){
+        dashboard.style.display = 'none';
+        reports.style.display   = 'block';
+        navD.classList.remove('active');
+        navR.classList.add('active');
+        renderReports();
+    } else {
+        reports.style.display   = 'none';
+        dashboard.style.display = 'block';
+        navD.classList.add('active');
+        navR.classList.remove('active');
+        setTimeout(()=>map.invalidateSize(), 100);
+    }
+}
+
+// ===== SCORING =====
+function countNearby(issue,all,r=1.2){
+    return all.filter(o=>{
+        if(o.id===issue.id) return false;
+        const dLat=(o.lat-issue.lat)*Math.PI/180, dLon=(o.lng-issue.lng)*Math.PI/180;
+        const a=Math.sin(dLat/2)**2+Math.cos(issue.lat*Math.PI/180)*Math.cos(o.lat*Math.PI/180)*Math.sin(dLon/2)**2;
+        return 6371*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))<=r;
+    }).length;
+}
+function calcScore(issue,all){
+    const n=countNearby(issue,all);
+    return (INFRA_WEIGHTS[issue.infrastructureType]||6)+(SEVERITY_LEVELS[issue.severity]||2)+(n<=2?2:n<=5?4:6);
+}
+function riskLevel(s){ return s>18?'critical':s>12?'medium':'low'; }
+function riskColor(r){ return {critical:'#ef4444',medium:'#f97316',low:'#22c55e'}[r]; }
+
+// ===== MAP =====
+const map = L.map('map').setView(KOLHAPUR_CENTER, MAP_ZOOM);
+
+const osmStreets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    attribution:'&copy; OpenStreetMap contributors', maxZoom:19
+});
+const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{
+    attribution:'&copy; Esri', maxZoom:19
+});
+osmStreets.addTo(map);
+
+const issueLayer    = L.layerGroup().addTo(map);
+const hospitalLayer = L.layerGroup().addTo(map);
+const schoolLayer   = L.layerGroup().addTo(map);
+const userLayer     = L.layerGroup().addTo(map);
+
+L.control.layers(
+    {'Street Map':osmStreets,'Satellite':satellite},
+    {'🏥 Hospitals':hospitalLayer,'🏫 Schools':schoolLayer},
+    {position:'topright'}
+).addTo(map);
+
+const legend = L.control({position:'bottomleft'});
+legend.onAdd = function(){
+    const d=L.DomUtil.create('div','map-legend');
+    d.innerHTML=`<h4>Map Legend</h4>
+        <div class="map-legend-item"><span class="map-legend-dot hospital"></span> Hospital</div>
+        <div class="map-legend-item"><span class="map-legend-dot school"></span> School</div>`;
+    return d;
+};
+legend.addTo(map);
+
+let heatLayer  = null;
+let heatVisible = true;
+
+// ===== ICONS =====
+const sh='0 2px 8px rgba(0,0,0,.4),0 0 0 2px rgba(255,255,255,.9)';
+function issueIcon(risk){
+    return L.divIcon({className:'',
+        html:`<div style="width:26px;height:26px;background:${riskColor(risk)};border:3px solid white;border-radius:50%;box-shadow:${sh};"></div>`,
+        iconSize:[26,26],iconAnchor:[13,13]});
+}
+const hospitalIcon=L.divIcon({className:'',
+    html:`<div style="width:40px;height:40px;background:linear-gradient(135deg,#dc2626,#ef4444);border:3px solid white;border-radius:10px;box-shadow:${sh};display:flex;align-items:center;justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M12 4v16M4 12h16"/></svg></div>`,
+    iconSize:[40,40],iconAnchor:[20,20]});
+const schoolIcon=L.divIcon({className:'',
+    html:`<div style="width:40px;height:40px;background:linear-gradient(135deg,#16a34a,#22c55e);border:3px solid white;border-radius:10px;box-shadow:${sh};display:flex;align-items:center;justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><path d="M8 7h8"/></svg></div>`,
+    iconSize:[40,40],iconAnchor:[20,20]});
+
+// ===== LOAD INFRASTRUCTURE =====
+function loadInfrastructure(city){
+    hospitalLayer.clearLayers();
+    schoolLayer.clearLayers();
+    (CITY_INFRASTRUCTURE[city]||CITY_INFRASTRUCTURE.kolhapur).forEach(({lat,lng,name,type})=>{
+        const h=type==='hospital';
+        L.marker([lat,lng],{icon:h?hospitalIcon:schoolIcon})
+         .bindPopup(`<div style="color:#f1f5f9;min-width:180px;">
+             <div style="font-size:11px;font-weight:600;text-transform:uppercase;color:${h?'#f87171':'#4ade80'};margin-bottom:4px;">${h?'🏥 Hospital':'🏫 School'}</div>
+             <strong style="font-size:13px;">${name}</strong></div>`)
+         .addTo(h?hospitalLayer:schoolLayer);
+    });
+}
+
+// ===== RENDER ISSUES =====
+function renderIssues(issues){
+    issueLayer.clearLayers();
+    issues.forEach(issue=>{
+        const s=calcScore(issue,issues), r=riskLevel(s);
+        issue.score=s; issue.riskLevel=r;
+        L.marker([issue.lat,issue.lng],{icon:issueIcon(r)})
+         .bindPopup(`<div style="color:#f1f5f9;min-width:200px;">
+             <strong style="font-size:13px;">${issue.title||issue.type}</strong>
+             <p style="font-size:12px;color:#94a3b8;margin:4px 0;">${issue.description}</p>
+             <span class="risk-${r}">${r}</span>
+             <span style="font-size:12px;margin-left:6px;">Score: ${s}</span></div>`)
+         .addTo(issueLayer);
+    });
+    if(heatLayer) map.removeLayer(heatLayer);
+    try {
+        heatLayer=L.heatLayer(
+            issues.map(i=>[i.lat,i.lng,i.severity==='high'?.8:i.severity==='medium'?.5:.3]),
+            {radius:35,blur:25,maxZoom:17,max:1,gradient:{0.2:'blue',0.5:'yellow',0.8:'orange',1:'red'}}
+        );
+        if(heatVisible) heatLayer.addTo(map);
+    } catch(e) {
+        console.warn('Heatmap error:', e);
+    }
+    updateStats();
+}
+
+// ===== STATS =====
+function updateStats(){
+    const range=CITY_RANGES[currentCity]||CITY_RANGES.kolhapur;
+    const h=rand(range.hospital[0],range.hospital[1]);
+    const s=rand(range.school[0],  range.school[1]);
+    const d=Math.min(rand(range.density[0],range.density[1]),5);
+    document.getElementById('statTotalIssues').textContent     = h+s+d;
+    document.getElementById('statHospitalsAtRisk').textContent = h;
+    document.getElementById('statSchoolsAtRisk').textContent   = s;
+    document.getElementById('statHighDensity').textContent     = d;
+}
+
+// ===== CITY CHANGE =====
+document.getElementById('citySelector').addEventListener('change',function(){
+    currentCity  =this.value;
+    currentCenter=(cityCenters[currentCity]||cityCenters.kolhapur).slice();
+    map.setView(currentCenter,MAP_ZOOM);
+    const cityLabel = this.options[this.selectedIndex].text;
+    document.getElementById('mapTitle').textContent='Infrastructure Risk Map — '+cityLabel;
+    loadInfrastructure(currentCity);
+    allIssues=generateSimulatedIssues();
+    renderIssues(allIssues);
+    setTimeout(()=>map.invalidateSize(),150);
+});
+
+// ===== HEATMAP =====
+document.getElementById('toggleHeatmap').addEventListener('click',function(){
+    heatVisible=!heatVisible;
+    if(heatVisible&&heatLayer) heatLayer.addTo(map);
+    else if(heatLayer) map.removeLayer(heatLayer);
+    this.textContent=heatVisible?'Hide Heatmap':'Show Heatmap';
+    this.className=heatVisible
+        ?'px-3 py-1.5 rounded-lg bg-orange-500/20 text-orange-400 text-sm hover:bg-orange-500/30 transition-colors'
+        :'px-3 py-1.5 rounded-lg glass-card text-sm hover:bg-white/10 transition-colors';
+});
+
+// ===== LOCATE ME =====
+document.getElementById('locateUser').addEventListener('click',()=>{
+    if(!navigator.geolocation) return alert('Geolocation not supported.');
+    navigator.geolocation.getCurrentPosition(pos=>{
+        userLayer.clearLayers();
+        L.marker([pos.coords.latitude,pos.coords.longitude],{
+            icon:L.divIcon({className:'',
+                html:'<div style="width:18px;height:18px;background:#3b82f6;border:3px solid white;border-radius:50%;box-shadow:0 2px 10px rgba(59,130,246,.6);"></div>',
+                iconSize:[24,24],iconAnchor:[12,12]})
+        }).bindPopup('Your Location').addTo(userLayer);
+        map.setView([pos.coords.latitude,pos.coords.longitude],15);
+    },err=>alert('Could not get location: '+err.message));
+});
+
+// ===== REPORT MODAL =====
+let allIssues = [...generateSimulatedIssues(), ...(getUserReports() || [])];
+
+document.getElementById('reportIssueBtn').addEventListener('click',()=>{
+    document.getElementById('issueLat').value=currentCenter[0].toFixed(4);
+    document.getElementById('issueLng').value=currentCenter[1].toFixed(4);
+    document.getElementById('reportModal').style.display='flex';
+});
+document.getElementById('closeModal').addEventListener('click',()=>{
+    document.getElementById('reportModal').style.display='none';
+});
+document.getElementById('reportModal').addEventListener('click',e=>{
+    if(e.target===document.getElementById('reportModal'))
+        document.getElementById('reportModal').style.display='none';
+});
+
+document.getElementById('reportForm').addEventListener('submit',async (e)=>{
+    e.preventDefault();
+    const type=document.getElementById('issueType').value; if(!type) return;
+    const inst=document.getElementById('issueInstitution').value.trim();
+    const sev =document.getElementById('issueSeverity').value;
+    const desc=document.getElementById('issueDescription').value.trim()||type;
+    const lat =parseFloat(document.getElementById('issueLat').value)||currentCenter[0];
+    const lng =parseFloat(document.getElementById('issueLng').value)||currentCenter[1];
+
+    const newIssue={
+        id:`issue-${Date.now()}`,
+        lat, lng, severity:sev, type,
+        description:desc,
+        infrastructureType:HOSPITAL_ISSUES.includes(type)?'hospital':'school',
+        title:inst?`${type} — ${inst}`:type,
+        user:currentUser,
+        city:currentCity,
+        timestamp:new Date().toISOString()
+    };
+
+    // Always save to localStorage first (works offline)
+    const existing = getUserReports();
+    existing.push(newIssue);
+    saveUserReports(existing);
+
+    // Try to also save to Supabase if configured
+    if(supabaseClient) {
+        try {
+            await supabaseClient.from("reports").insert([{
+                user_email: currentUser,
+                issue_type: type,
+                institution: inst,
+                severity: sev,
+                description: desc,
+                lat: lat,
+                lng: lng,
+                city: currentCity
+            }]);
+        } catch(e) {
+            console.warn("Supabase insert failed, saved locally only:", e.message);
+        }
+    }
+
+    // Update map issues
+    allIssues.push(newIssue);
+    renderIssues(allIssues);
+
+    document.getElementById('reportForm').reset();
+    document.getElementById('reportModal').style.display='none';
+    map.setView([lat,lng],16);
+
+    // Flash the Reports badge
+    showView('dashboard');
+});
+
+function logout(){
+    localStorage.removeItem('currentUser');
+    window.location.href='index.html';
+}
+
+// ===== BOOT =====
+try {
+    loadInfrastructure('kolhapur');
+    renderIssues(allIssues);
+    updateReportsBadge();
+    setTimeout(()=>map.invalidateSize(),300);
+} catch(e) {
+    console.error('Boot error:', e);
+}
+
+</script>
+</body>
+</html>
