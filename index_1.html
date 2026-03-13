@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Invisible Infrastructure Mapper</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+<style>
+body {
+  background: linear-gradient(135deg, #020617, #0f172a, #1e3a8a, #312e81);
+  background-size: 400% 400%;
+  animation: gradientBG 10s ease infinite;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+@keyframes gradientBG {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.glass {
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.glow { box-shadow: 0 0 20px rgba(59,130,246,0.6); }
+
+input { transition: 0.3s; }
+input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 10px rgba(59,130,246,0.4);
+}
+
+.floating {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  background: rgba(59,130,246,0.3);
+  filter: blur(80px);
+  animation: float 6s infinite alternate;
+}
+
+@keyframes float {
+  from { transform: translateY(-20px); }
+  to   { transform: translateY(20px); }
+}
+
+.btn-loading { opacity: 0.7; cursor: not-allowed; }
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: rgba(30,41,59,0.95);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 14px;
+  transition: transform 0.4s ease;
+  z-index: 999;
+  white-space: nowrap;
+  backdrop-filter: blur(20px);
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.success { border-color: rgba(34,197,94,0.4); }
+.toast.error   { border-color: rgba(239,68,68,0.4); }
+</style>
+</head>
+
+<body class="min-h-screen flex items-center justify-center relative overflow-hidden">
+
+<div class="floating top-10 left-20"></div>
+<div class="floating bottom-10 right-20"></div>
+
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+
+<div class="grid md:grid-cols-2 gap-12 max-w-6xl items-center px-6">
+
+  <!-- LEFT SIDE -->
+  <div class="text-white space-y-6">
+    <h1 class="text-6xl font-extrabold leading-tight">
+      Reveal the <span class="text-blue-400">Unseen</span>
+    </h1>
+    <p class="text-lg text-gray-300">
+      Report infrastructure problems and track repairs in real time.
+    </p>
+    <div class="flex gap-4 flex-wrap">
+      <span class="bg-white/20 px-4 py-2 rounded-full backdrop-blur">
+        <i class="fa fa-hospital mr-2"></i>Hospitals
+      </span>
+      <span class="bg-white/20 px-4 py-2 rounded-full backdrop-blur">
+        <i class="fa fa-school mr-2"></i>Schools
+      </span>
+    </div>
+
+    <!-- Mode badge -->
+    <div id="modeBadge" class="hidden">
+      <span id="modeBadgeText" class="px-3 py-1 rounded-full text-xs font-semibold"></span>
+    </div>
+  </div>
+
+  <!-- LOGIN CARD -->
+  <div class="glass rounded-3xl shadow-2xl p-10 w-[400px] glow">
+
+    <h2 class="text-3xl font-bold text-center text-white mb-2">Welcome Back</h2>
+    <p class="text-center text-gray-200 mb-6">Sign in to access dashboard</p>
+
+    <!-- Demo hint (shown when Supabase not configured) -->
+    <div id="demoHint" class="hidden bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-3 mb-4 text-xs text-yellow-300">
+      <i class="fa fa-info-circle mr-1"></i>
+      <strong>Demo Mode:</strong> Sign up first with any email &amp; password (min 6 chars), then login.
+    </div>
+
+    
+
+    <p class="text-center text-gray-300 text-sm mt-6">© 2026 Invisible Infrastructure Mapper</p>
+  </div>
+</div>
+
+<script>
+// ───────────────────────────────────────────────────
+// CONFIG — Replace with your real Supabase anon key
+// Get it from: Supabase Dashboard → Settings → API → anon/public key
+// ───────────────────────────────────────────────────
+const SUPABASE_URL = "https://zghhpmdhswxprddzlqga.supabase.co";
+const SUPABASE_KEY = "PASTE_YOUR_SUPABASE_ANON_KEY_HERE";
+
+// ───────────────────────────────────────────────────
+// Auto-detect if Supabase is configured
+// ───────────────────────────────────────────────────
+const isSupabaseConfigured = SUPABASE_KEY && !SUPABASE_KEY.includes("PASTE");
+
+let supabaseClient = null;
+if (isSupabaseConfigured) {
+  try {
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    console.log("✅ Supabase connected");
+  } catch(e) {
+    console.warn("Supabase init failed:", e.message);
+  }
+}
+
+// Update UI badges
+window.addEventListener('DOMContentLoaded', () => {
+  const badge = document.getElementById('modeBadge');
+  const badgeText = document.getElementById('modeBadgeText');
+  const hint = document.getElementById('demoHint');
+
+  if (!supabaseClient) {
+    badge.classList.remove('hidden');
+    badgeText.textContent = '🔓 Demo Mode (Local Auth)';
+    badgeText.className = 'px-3 py-1 rounded-full text-xs font-semibold bg-yellow-500/20 text-yellow-300 border border-yellow-500/30';
+    hint.classList.remove('hidden');
+  } else {
+    badge.classList.remove('hidden');
+    badgeText.textContent = '🔗 Supabase Connected';
+    badgeText.className = 'px-3 py-1 rounded-full text-xs font-semibold bg-green-500/20 text-green-300 border border-green-500/30';
+  }
+});
+
+// ───────────────────────────────────────────────────
+// Toast helper
+// ───────────────────────────────────────────────────
+function showToast(msg, type = 'info') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => { t.className = `toast ${type}`; }, 3000);
+}
+
+// ───────────────────────────────────────────────────
+// Password toggle
+// ───────────────────────────────────────────────────
+function togglePassword() {
+  const pass = document.getElementById("password");
+  const eye  = document.getElementById("eye");
+  if (pass.type === "password") {
+    pass.type = "text";
+    eye.className = "fa fa-eye-slash";
+  } else {
+    pass.type = "password";
+    eye.className = "fa fa-eye";
+  }
+}
+
+// ───────────────────────────────────────────────────
+// Button loading state
+// ───────────────────────────────────────────────────
+function setLoginLoading(loading) {
+  const btn  = document.getElementById('loginBtn');
+  const icon = document.getElementById('loginIcon');
+  const text = document.getElementById('loginText');
+  if (loading) {
+    btn.classList.add('btn-loading');
+    btn.disabled = true;
+    icon.className = 'fa fa-spinner fa-spin';
+    text.textContent = 'Logging in...';
+  } else {
+    btn.classList.remove('btn-loading');
+    btn.disabled = false;
+    icon.className = 'fa fa-sign-in-alt';
+    text.textContent = 'Login';
+  }
+}
+
+// ───────────────────────────────────────────────────
+// LOCAL (Demo) auth — stored in localStorage
+// ───────────────────────────────────────────────────
+function getLocalAccounts() {
+  try { return JSON.parse(localStorage.getItem('localAccounts') || '{}'); }
+  catch(e) { return {}; }
+}
+
+function saveLocalAccounts(accounts) {
+  localStorage.setItem('localAccounts', JSON.stringify(accounts));
+}
+
+function localSignup(email, password) {
+  const accounts = getLocalAccounts();
+  if (accounts[email]) return { error: 'Account already exists. Please login.' };
+  accounts[email] = btoa(password); // basic encoding (not for production)
+  saveLocalAccounts(accounts);
+  return { success: true };
+}
+
+function localLogin(email, password) {
+  const accounts = getLocalAccounts();
+  if (!accounts[email]) return { error: 'No account found. Please Sign Up first.' };
+  if (accounts[email] !== btoa(password)) return { error: 'Wrong password. Try again.' };
+  return { success: true };
+}
+
+// ───────────────────────────────────────────────────
+// HANDLE LOGIN
+// ───────────────────────────────────────────────────
+async function handleLogin(e) {
+  e.preventDefault();
+  const email = document.getElementById("email").value.trim();
+  const pass  = document.getElementById("password").value;
+
+  if (!email || !pass) {
+    showToast('⚠️ Please enter email and password', 'error');
+    return;
+  }
+
+  setLoginLoading(true);
+
+  try {
+    if (supabaseClient) {
+      // ── Supabase Auth ──
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
+      if (error) {
+        showToast('❌ ' + error.message, 'error');
+      } else {
+        localStorage.setItem("currentUser", email);
+        showToast('✅ Login successful! Redirecting...', 'success');
+        setTimeout(() => { window.location.href = "dash.html"; }, 800);
+      }
+    } else {
+      // ── Demo Local Auth ──
+      const result = localLogin(email, pass);
+      if (result.error) {
+        showToast('❌ ' + result.error, 'error');
+      } else {
+        localStorage.setItem("currentUser", email);
+        showToast('✅ Login successful! Redirecting...', 'success');
+        setTimeout(() => { window.location.href = "dash.html"; }, 800);
+      }
+    }
+  } catch(err) {
+    showToast('❌ Something went wrong. Try again.', 'error');
+    console.error(err);
+  } finally {
+    setLoginLoading(false);
+  }
+}
+
+// ───────────────────────────────────────────────────
+// HANDLE SIGNUP
+// ───────────────────────────────────────────────────
+async function handleSignup() {
+  const email = document.getElementById("email").value.trim();
+  const pass  = document.getElementById("password").value;
+
+  if (!email || !pass) {
+    showToast('⚠️ Please enter email and password', 'error');
+    return;
+  }
+  if (pass.length < 6) {
+    showToast('⚠️ Password must be at least 6 characters', 'error');
+    return;
+  }
+
+  try {
+    if (supabaseClient) {
+      // ── Supabase Signup ──
+      const { data, error } = await supabaseClient.auth.signUp({ email, password: pass });
+      if (error) {
+        showToast('❌ ' + error.message, 'error');
+      } else {
+        showToast('✅ Account created! Check your email to confirm.', 'success');
+      }
+    } else {
+      // ── Demo Local Signup ──
+      const result = localSignup(email, pass);
+      if (result.error) {
+        showToast('⚠️ ' + result.error, 'error');
+      } else {
+        showToast('✅ Account created! You can now login.', 'success');
+      }
+    }
+  } catch(err) {
+    showToast('❌ Something went wrong.', 'error');
+    console.error(err);
+  }
+}
+</script>
+
+</body>
+</html>
