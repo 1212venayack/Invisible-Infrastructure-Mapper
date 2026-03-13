@@ -1,0 +1,1776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>inframap.gov.in — National Infrastructure Monitoring Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Noto+Serif:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --saffron:   #FF9933;
+  --saffron-d: #E07800;
+  --green:     #138808;
+  --green-l:   #1aa30a;
+  --navy:      #000080;
+  --chakra:    #000080;
+  --white:     #ffffff;
+  --off-white: #f7f4ef;
+  --text-dark: #1a1a1a;
+  --text-mid:  #444444;
+  --text-light:#666666;
+  --border:    #d4cfc8;
+  --gold:      #c9a227;
+  --gold-l:    #e8c84a;
+  --surface:   #f0ede7;
+  --card-bg:   #ffffff;
+  --red-gov:   #c0392b;
+  --font-sans:  'Noto Sans', sans-serif;
+  --font-serif: 'Noto Serif', serif;
+  --font-hindi: 'Noto Sans Devanagari', sans-serif;
+}
+
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-sans);
+  background: var(--off-white);
+  color: var(--text-dark);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── SKIP LINK ─── */
+.skip-link {
+  position: absolute; top:-40px; left:8px; z-index:9999;
+  background:var(--navy); color:#fff; padding:6px 12px; border-radius:0 0 4px 4px;
+  font-size:13px; transition: top 0.2s;
+}
+.skip-link:focus { top:0; }
+
+/* ─── TOP GOV BAR ─── */
+.top-gov-bar {
+  background: #1a1a2e;
+  color: #ccc;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 32px;
+  border-bottom: 1px solid #333;
+}
+.top-gov-bar-left { display: flex; align-items: center; gap: 20px; }
+.top-gov-bar-right { display: flex; align-items: center; gap: 16px; }
+.top-gov-bar a { color: #aaa; text-decoration: none; font-size: 11px; }
+.top-gov-bar a:hover { color: #fff; text-decoration: underline; }
+.top-gov-bar .sep { color: #444; }
+.lang-switch { display: flex; gap: 6px; }
+.lang-btn {
+  background: none; border: 1px solid #444; color: #aaa; font-size: 11px;
+  padding: 1px 8px; border-radius: 2px; cursor: pointer; font-family: var(--font-sans);
+  transition: all 0.15s;
+}
+.lang-btn:hover, .lang-btn.active { background: var(--saffron); border-color: var(--saffron); color: #1a1a1a; }
+.gov-india-flag { display: flex; gap: 3px; align-items: center; }
+.flag-stripe { height: 8px; width: 4px; border-radius: 1px; }
+.flag-stripe.s { background: var(--saffron); }
+.flag-stripe.w { background: #ffffff; }
+.flag-stripe.g { background: var(--green); }
+
+/* ─── TRICOLOR BAR ─── */
+.tricolor-bar {
+  height: 5px;
+  background: linear-gradient(to right, var(--saffron) 33.33%, #ffffff 33.33% 66.66%, var(--green) 66.66%);
+}
+
+/* ─── HEADER ─── */
+.site-header {
+  background: #fff;
+  border-bottom: 2px solid var(--border);
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+.header-emblem-wrap {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 0;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+.header-emblem-img {
+  width: 56px;
+  height: 56px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* SVG Ashoka Lion Capital - simplified */
+.emblem-svg { width: 52px; height: 52px; }
+
+.header-title-block { border-left: 2px solid var(--border); padding-left: 16px; }
+.header-site-name {
+  font-family: var(--font-sans);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--navy);
+  letter-spacing: -0.3px;
+  line-height: 1;
+}
+.header-site-name .dot { color: var(--saffron); }
+.header-site-name .gov { color: var(--green); }
+.header-beta {
+  display: inline-block;
+  background: var(--saffron);
+  color: #1a1a1a;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 2px;
+  vertical-align: super;
+  letter-spacing: 0.5px;
+  margin-left: 4px;
+}
+.header-tagline {
+  font-size: 11px;
+  color: var(--text-light);
+  font-family: var(--font-sans);
+  margin-top: 3px;
+  letter-spacing: 0.2px;
+}
+.header-tagline-hi {
+  font-family: var(--font-hindi);
+  font-size: 11px;
+  color: #888;
+}
+
+.header-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.header-icon-btn {
+  width: 36px; height: 36px;
+  border-radius: 4px;
+  background: var(--off-white);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  color: var(--text-mid);
+  transition: all 0.15s;
+}
+.header-icon-btn:hover { background: var(--surface); border-color: #bbb; color: var(--navy); }
+.header-icon-btn svg { width: 18px; height: 18px; }
+
+/* ─── NAV BAR ─── */
+.main-nav {
+  background: var(--navy);
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  position: sticky;
+  top: 79px;
+  z-index: 90;
+}
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 13px 18px;
+  color: rgba(255,255,255,0.85);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  border-bottom: 3px solid transparent;
+  transition: all 0.15s;
+  white-space: nowrap;
+  cursor: pointer;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  font-family: var(--font-sans);
+}
+.nav-link:hover { color: #fff; background: rgba(255,255,255,0.07); border-bottom-color: var(--saffron); }
+.nav-link.active { color: #fff; border-bottom-color: var(--saffron); background: rgba(255,255,255,0.05); }
+.nav-link svg { width: 15px; height: 15px; opacity: 0.8; }
+.nav-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+.nav-login-btn {
+  padding: 7px 18px;
+  background: var(--saffron);
+  color: #1a1a1a;
+  border: none;
+  border-radius: 3px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  transition: all 0.15s;
+}
+.nav-login-btn:hover { background: var(--saffron-d); }
+
+/* ─── HERO ─── */
+.hero {
+  position: relative;
+  min-height: 520px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 60px 24px 80px;
+  text-align: center;
+}
+
+/* Hero background — cityscape silhouette + gradient */
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to bottom, rgba(10,10,35,0.82) 0%, rgba(10,10,55,0.75) 60%, rgba(5,5,25,0.92) 100%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1400 520'%3E%3Crect width='1400' height='520' fill='%23080820'/%3E%3C!-- Stars --%3E%3Ccircle cx='120' cy='80' r='1' fill='white' opacity='.6'/%3E%3Ccircle cx='340' cy='45' r='1.5' fill='white' opacity='.4'/%3E%3Ccircle cx='560' cy='110' r='1' fill='white' opacity='.5'/%3E%3Ccircle cx='780' cy='30' r='1' fill='white' opacity='.6'/%3E%3Ccircle cx='960' cy='90' r='1.5' fill='white' opacity='.3'/%3E%3Ccircle cx='1150' cy='60' r='1' fill='white' opacity='.7'/%3E%3Ccircle cx='1320' cy='100' r='1' fill='white' opacity='.4'/%3E%3Ccircle cx='220' cy='140' r='1' fill='white' opacity='.3'/%3E%3Ccircle cx='870' cy='155' r='1' fill='white' opacity='.4'/%3E%3C!-- Cityscape silhouette --%3E%3Crect x='0' y='370' width='1400' height='150' fill='%23060618'/%3E%3C!-- Buildings --%3E%3Crect x='30' y='300' width='40' height='70' fill='%230a0a25'/%3E%3Crect x='40' y='310' width='6' height='8' fill='%23ffcc44' opacity='.5'/%3E%3Crect x='54' y='310' width='6' height='8' fill='%23ffcc44' opacity='.3'/%3E%3Crect x='80' y='280' width='30' height='90' fill='%230c0c2a'/%3E%3Crect x='85' y='290' width='5' height='6' fill='%23ffcc44' opacity='.4'/%3E%3Crect x='96' y='300' width='5' height='6' fill='%23ffcc44' opacity='.6'/%3E%3Crect x='120' y='260' width='50' height='110' fill='%230e0e30'/%3E%3Crect x='130' y='275' width='7' height='8' fill='%23ffcc44' opacity='.5'/%3E%3Crect x='145' y='275' width='7' height='8' fill='%23ffcc44' opacity='.3'/%3E%3Crect x='130' y='295' width='7' height='8' fill='%23ffcc44' opacity='.4'/%3E%3Crect x='180' y='310' width='35' height='60' fill='%230a0a22'/%3E%3Crect x='225' y='290' width='55' height='80' fill='%230d0d2c'/%3E%3Crect x='233' y='300' width='7' height='8' fill='%23ffcc44' opacity='.5'/%3E%3Crect x='248' y='300' width='7' height='8' fill='%23ffcc44' opacity='.3'/%3E%3Crect x='263' y='305' width='7' height='8' fill='%23ffcc44' opacity='.6'/%3E%3Crect x='290' y='250' width='45' height='120' fill='%23100f30'/%3E%3Crect x='300' y='262' width='7' height='8' fill='%23ffcc44' opacity='.4'/%3E%3Crect x='315' y='262' width='7' height='8' fill='%23ffcc44' opacity='.6'/%3E%3Crect x='300' y='280' width='7' height='8' fill='%23ffcc44' opacity='.3'/%3E%3Crect x='315' y='280' width='7' height='8' fill='%23ffcc44' opacity='.5'/%3E%3Crect x='300' y='298' width='7' height='8' fill='%23ffcc44' opacity='.4'/%3E%3Crect x='345' y='315' width='30' height='55' fill='%230a0a22'/%3E%3Crect x='385' y='285' width='60' height='85' fill='%230c0c2a'/%3E%3Crect x='393' y='295' width='8' height='9' fill='%23ffcc44' opacity='.5'/%3E%3Crect x='408' y='295' width='8' height='9' fill='%23ffcc44' opacity='.3'/%3E%3Crect x='425' y='295' width='8' height='9' fill='%23ffcc44' opacity='.6'/%3E%3Crect x='455' y='300' width='40' height='70' fill='%230a0a22'/%3E%3Crect x='505' y='255' width='70' height='115' fill='%23100f35'/%3E%3Crect x='513' y='268' width='9' height='10' fill='%23ffcc44' opacity='.4'/%3E%3Crect x='530' y='268' width='9' height='10' fill='%23ffcc44' opacity='.6'/%3E%3Crect x='548' y='268' width='9' height='10' fill='%23ffcc44' opacity='.3'/%3E%3Crect x='513' y='288' width='9' height='10' fill='%23ffcc44' opacity='.5'/%3E%3Crect x='530' y='288' width='9' height='10' fill='%23ffcc44' opacity='.4'/%3E%3Crect x='548' y='288' width='9' height='10' fill='%23ffcc44' opacity='.6'/%3E%3Crect x='513' y='308' width='9' height='10' fill='%23ffcc44' opacity='.3'/%3E%3Crect x='530' y='308' width='9' height='10' fill='%23ffcc44' opacity='.5'/%3E%3Crect x='585' y='290' width='35' height='80' fill='%230c0c28'/%3E%3Crect x='630' y='270' width='50' height='100' fill='%230d0d2e'/%3E%3Crect x='638' y='282' width='7' height='8' fill='%23ffcc44' opacity='.6'/%3E%3Crect x='653' y='282' width='7' height='8' fill='%23ffcc44' opacity='.3'/%3E%3Crect x='668' y='282' width='7' height='8' fill='%23ffcc44' opacity='.5'/%3E%3Crect x='638' y='300' width='7' height='8' fill='%23ffcc44' opacity='.4'/%3E%3Crect x='653' y='300' width='7' height='8' fill='%23ffcc44' opacity='.6'/%3E%3Crect x='690' y='285' width='45' height='85' fill='%230b0b26'/%3E%3Crect x='745' y='240' width='65' height='130' fill='%23120f38'/%3E%3Crect x='754' y='252' width='9' height='10' fill='%23ffcc44' opacity='.5'/%3E%3Crect x='770' y='252' width='9' height='10' fill='%23ffcc44' opacity='.4'/%3E%3Crect x='787' y='252' width='9' height='10' fill='%23ffcc44' opacity='.6'/%3E%3Crect x='754' y='272' width='9' height='10' fill='%23ffcc44' opacity='.3'/%3E%3Crect x='770' y='272' width='9' height='10' fill='%23ffcc44' opacity='.5'/%3E%3Crect x='787' y='272' width='9' height='10' fill='%23ffcc44' opacity='.4'/%3E%3Crect x='754' y='292' width='9' height='10' fill='%23ffcc44' opacity='.6'/%3E%3Crect x='770' y='292' width='9' height='10' fill='%23ffcc44' opacity='.3'/%3E%3Crect x='820' y='300' width='40' height='70' fill='%230a0a22'/%3E%3Crect x='870' y='275' width='55' height='95' fill='%230d0d2c'/%3E%3Crect x='878' y='286' width='8' height='9' fill='%23ffcc44' opacity='.5'/%3E%3Crect x='893' y='286' width='8' height='9' fill='%23ffcc44' opacity='.3'/%3E%3Crect x='910' y='286' width='8' height='9' fill='%23ffcc44' opacity='.6'/%3E%3Crect x='878' y='305' width='8' height='9' fill='%23ffcc44' opacity='.4'/%3E%3Crect x='893' y='305' width='8' height='9' fill='%23ffcc44' opacity='.6'/%3E%3Crect x='935' y='260' width='60' height='110' fill='%23100e32'/%3E%3Crect x='944' y='272' width='9' height='10' fill='%23ffcc44' opacity='.5'/%3E%3Crect x='960' y='272' width='9' height='10' fill='%23ffcc44' opacity='.4'/%3E%3Crect x='975' y='272' width='9' height='10' fill='%23ffcc44' opacity='.3'/%3E%3Crect x='944' y='292' width='9' height='10' fill='%23ffcc44' opacity='.6'/%3E%3Crect x='960' y='292' width='9' height='10' fill='%23ffcc44' opacity='.5'/%3E%3Crect x='1005' y='295' width='35' height='75' fill='%230b0b26'/%3E%3Crect x='1050' y='270' width='50' height='100' fill='%230c0c2a'/%3E%3Crect x='1058' y='282' width='8' height='9' fill='%23ffcc44' opacity='.4'/%3E%3Crect x='1073' y='282' width='8' height='9' fill='%23ffcc44' opacity='.6'/%3E%3Crect x='1088' y='282' width='8' height='9' fill='%23ffcc44' opacity='.3'/%3E%3Crect x='1058' y='301' width='8' height='9' fill='%23ffcc44' opacity='.5'/%3E%3Crect x='1110' y='285' width='40' height='85' fill='%230a0a22'/%3E%3Crect x='1160' y='250' width='65' height='120' fill='%230e0c30'/%3E%3Crect x='1168' y='262' width='9' height='10' fill='%23ffcc44' opacity='.5'/%3E%3Crect x='1184' y='262' width='9' height='10' fill='%23ffcc44' opacity='.3'/%3E%3Crect x='1200' y='262' width='9' height='10' fill='%23ffcc44' opacity='.6'/%3E%3Crect x='1168' y='282' width='9' height='10' fill='%23ffcc44' opacity='.4'/%3E%3Crect x='1184' y='282' width='9' height='10' fill='%23ffcc44' opacity='.6'/%3E%3Crect x='1200' y='282' width='9' height='10' fill='%23ffcc44' opacity='.3'/%3E%3Crect x='1168' y='302' width='9' height='10' fill='%23ffcc44' opacity='.5'/%3E%3Crect x='1235' y='305' width='35' height='65' fill='%230a0a22'/%3E%3Crect x='1280' y='280' width='45' height='90' fill='%230c0c28'/%3E%3Crect x='1288' y='292' width='7' height='8' fill='%23ffcc44' opacity='.4'/%3E%3Crect x='1302' y='292' width='7' height='8' fill='%23ffcc44' opacity='.6'/%3E%3Crect x='1335' y='310' width='40' height='60' fill='%230a0a22'/%3E%3Crect x='1380' y='290' width='30' height='80' fill='%230b0b26'/%3E%3C!-- Ground --%3E%3Crect x='0' y='368' width='1400' height='4' fill='%23FF9933' opacity='.15'/%3E%3Crect x='0' y='372' width='1400' height='2' fill='%23ffffff' opacity='.08'/%3E%3Crect x='0' y='374' width='1400' height='4' fill='%23138808' opacity='.15'/%3E%3C/svg%3E") center/cover no-repeat;
+}
+
+/* animated radial glow */
+.hero-bg::after {
+  content: '';
+  position: absolute;
+  top: 30%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px; height: 300px;
+  background: radial-gradient(ellipse, rgba(255,153,51,0.08) 0%, transparent 70%);
+  animation: heroPulse 5s ease-in-out infinite;
+}
+@keyframes heroPulse {
+  0%,100% { opacity: 0.6; transform: translate(-50%,-50%) scale(1); }
+  50%      { opacity: 1;   transform: translate(-50%,-50%) scale(1.1); }
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  animation: heroReveal 0.9s cubic-bezier(0.16,1,0.3,1) both;
+}
+@keyframes heroReveal {
+  from { opacity:0; transform: translateY(24px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+
+/* Ashoka Chakra decorative */
+.chakra-ring {
+  width: 110px; height: 110px;
+  margin-bottom: 20px;
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  filter: drop-shadow(0 0 16px rgba(255,153,51,0.4));
+  animation: chakraSpin 60s linear infinite;
+}
+@keyframes chakraSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.chakra-ring svg { width: 110px; height: 110px; }
+
+.hero-emblem {
+  width: 80px; height: 80px;
+  margin-bottom: 18px;
+  filter: drop-shadow(0 2px 12px rgba(255,153,51,0.4));
+  animation: emblemFloat 5s ease-in-out infinite;
+}
+@keyframes emblemFloat {
+  0%,100% { transform: translateY(0); }
+  50%     { transform: translateY(-5px); }
+}
+
+.hero-site-id {
+  font-family: var(--font-sans);
+  font-size: clamp(32px, 5vw, 52px);
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.5px;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.hero-site-id .tld { color: var(--saffron); }
+.hero-site-id .gov-part { color: #7ec8a0; }
+.hero-beta-badge {
+  display: inline-block;
+  background: var(--saffron);
+  color: #1a1a1a;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 3px;
+  vertical-align: super;
+  letter-spacing: 1px;
+  margin-left: 6px;
+  font-family: var(--font-sans);
+}
+
+.hero-portal-name {
+  font-family: var(--font-serif);
+  font-size: clamp(16px, 2.5vw, 22px);
+  color: rgba(255,255,255,0.92);
+  font-weight: 600;
+  margin-bottom: 6px;
+  letter-spacing: 0.3px;
+}
+.hero-portal-name-hi {
+  font-family: var(--font-hindi);
+  font-size: 15px;
+  color: rgba(255,255,255,0.55);
+  margin-bottom: 4px;
+}
+.hero-tagline {
+  font-size: 14px;
+  color: rgba(255,255,255,0.55);
+  font-style: italic;
+  margin-bottom: 36px;
+  font-family: var(--font-serif);
+}
+
+/* Tricolor divider */
+.hero-divider {
+  width: 180px;
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(to right, var(--saffron) 33.33%, #ffffff 33.33% 66.66%, var(--green) 66.66%);
+  margin-bottom: 36px;
+  opacity: 0.85;
+}
+
+/* ─── HERO SEARCH BOX ─── */
+.hero-search-form {
+  display: flex;
+  width: 100%;
+  max-width: 760px;
+  background: #fff;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 6px 32px rgba(0,0,0,0.35), 0 0 0 2px rgba(255,153,51,0.25);
+  animation: heroReveal 0.9s cubic-bezier(0.16,1,0.3,1) 0.15s both;
+}
+.search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 16px 20px;
+  font-size: 15px;
+  color: var(--text-dark);
+  font-family: var(--font-sans);
+  background: transparent;
+}
+.search-input::placeholder { color: #aaa; }
+.search-category-wrap {
+  display: flex;
+  align-items: center;
+  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  padding: 0 4px 0 14px;
+  background: #fafafa;
+  gap: 4px;
+}
+.search-category {
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  color: var(--text-mid);
+  font-family: var(--font-sans);
+  padding: 16px 0;
+  cursor: pointer;
+  outline: none;
+  min-width: 120px;
+}
+.search-btn {
+  padding: 0 32px;
+  background: var(--red-gov);
+  color: #fff;
+  border: none;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: background 0.15s;
+  letter-spacing: 0.3px;
+}
+.search-btn:hover { background: #a93226; }
+
+.hero-quick-links {
+  display: flex;
+  gap: 14px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+  animation: heroReveal 0.9s cubic-bezier(0.16,1,0.3,1) 0.25s both;
+}
+.quick-link {
+  color: rgba(255,255,255,0.72);
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  transition: color 0.15s;
+  font-family: var(--font-sans);
+}
+.quick-link:hover { color: var(--saffron); }
+
+/* ─── ALERT TICKER ─── */
+.alert-ticker {
+  background: #fffaed;
+  border-top: 3px solid var(--saffron);
+  border-bottom: 1px solid #f0e0b0;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  overflow: hidden;
+}
+.ticker-label {
+  background: var(--saffron);
+  color: #1a1a1a;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 9px 16px;
+  white-space: nowrap;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+.ticker-content {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+.ticker-text {
+  display: flex;
+  gap: 60px;
+  animation: tickerScroll 35s linear infinite;
+  white-space: nowrap;
+  padding: 9px 20px;
+  font-size: 12px;
+  color: var(--text-mid);
+}
+@keyframes tickerScroll {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(-200%); }
+}
+.ticker-item { display: inline-flex; align-items: center; gap: 6px; }
+.ticker-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--saffron); flex-shrink: 0; }
+
+/* ─── MAIN SECTION ─── */
+.main-section {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 24px;
+}
+
+/* Section headers */
+.section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 12px;
+}
+.section-title {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--navy);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-title::before {
+  content: '';
+  display: block;
+  width: 4px;
+  height: 22px;
+  background: linear-gradient(to bottom, var(--saffron), var(--green));
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.section-view-all {
+  font-size: 13px;
+  color: var(--navy);
+  text-decoration: underline;
+  cursor: pointer;
+  font-family: var(--font-sans);
+}
+.section-view-all:hover { color: var(--saffron-d); }
+
+/* ─── STATS STRIP ─── */
+.stats-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 36px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.stat-item {
+  background: #fff;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  cursor: default;
+  transition: background 0.15s;
+}
+.stat-item:hover { background: #fffdf9; }
+.stat-num {
+  font-family: var(--font-serif);
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--navy);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.stat-num.s { color: var(--saffron-d); }
+.stat-num.g { color: var(--green); }
+.stat-num.r { color: var(--red-gov); }
+.stat-label {
+  font-size: 12px;
+  color: var(--text-light);
+  font-family: var(--font-sans);
+  font-weight: 500;
+}
+
+/* ─── SERVICE CARDS ─── */
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 40px;
+}
+@media (max-width: 1100px) { .services-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 800px)  { .services-grid { grid-template-columns: repeat(2, 1fr); } }
+
+.service-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 24px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+  text-decoration: none;
+  display: block;
+}
+.service-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(to right, var(--saffron), var(--green));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.25s;
+}
+.service-card:hover {
+  border-color: #b8b0a4;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.10);
+  transform: translateY(-2px);
+}
+.service-card:hover::before { transform: scaleX(1); }
+
+.service-icon-wrap {
+  width: 60px; height: 60px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 14px;
+  font-size: 28px;
+}
+.service-icon-wrap.saffron { background: rgba(255,153,51,0.1); border: 1px solid rgba(255,153,51,0.2); }
+.service-icon-wrap.navy    { background: rgba(0,0,128,0.07);   border: 1px solid rgba(0,0,128,0.12); }
+.service-icon-wrap.green   { background: rgba(19,136,8,0.08);  border: 1px solid rgba(19,136,8,0.15); }
+.service-icon-wrap.red     { background: rgba(192,57,43,0.08); border: 1px solid rgba(192,57,43,0.15); }
+
+.service-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--navy);
+  margin-bottom: 8px;
+  font-family: var(--font-sans);
+  line-height: 1.3;
+}
+.service-desc {
+  font-size: 12px;
+  color: var(--text-light);
+  line-height: 1.5;
+  font-family: var(--font-sans);
+}
+
+/* ─── TWO COLUMN LAYOUT ─── */
+.two-col-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 28px;
+  margin-bottom: 40px;
+}
+@media (max-width: 1000px) { .two-col-grid { grid-template-columns: 1fr; } }
+
+/* ─── LATEST REPORTS ─── */
+.reports-list {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.report-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 18px;
+  border-bottom: 1px solid #f0ede7;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.report-row:last-child { border-bottom: none; }
+.report-row:hover { background: #fffdf9; }
+.report-row-icon {
+  width: 36px; height: 36px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+.report-row-icon.h { background: rgba(192,57,43,0.08); border: 1px solid rgba(192,57,43,0.15); }
+.report-row-icon.s { background: rgba(19,136,8,0.08);  border: 1px solid rgba(19,136,8,0.15); }
+.report-row-body { flex: 1; min-width: 0; }
+.report-row-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.report-row-meta { font-size: 11px; color: var(--text-light); display: flex; gap: 10px; flex-wrap: wrap; }
+.sev-pill {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+.sev-pill.high   { background: rgba(192,57,43,0.1); color: var(--red-gov); border: 1px solid rgba(192,57,43,0.2); }
+.sev-pill.medium { background: rgba(255,153,51,0.1); color: #b35900; border: 1px solid rgba(255,153,51,0.25); }
+.sev-pill.low    { background: rgba(19,136,8,0.08); color: #0a6804; border: 1px solid rgba(19,136,8,0.2); }
+
+/* ─── SIDEBAR PANEL ─── */
+.sidebar-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.info-box {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.info-box-header {
+  background: var(--navy);
+  color: #fff;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.info-box-body { padding: 14px 16px; }
+.info-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0ede7;
+  font-size: 13px;
+  color: var(--navy);
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.15s;
+  font-family: var(--font-sans);
+}
+.info-link:last-child { border-bottom: none; }
+.info-link:hover { color: var(--saffron-d); }
+.info-link svg { width: 14px; height: 14px; opacity: 0.5; flex-shrink: 0; }
+.info-link-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--saffron); flex-shrink: 0; }
+
+/* City status cards */
+.city-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.city-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.city-card:hover { background: #fff; border-color: var(--navy); }
+.city-card-name { font-size: 12px; font-weight: 600; color: var(--navy); margin-bottom: 4px; }
+.city-card-stat { font-size: 18px; font-weight: 700; color: var(--red-gov); line-height: 1; }
+.city-card-sub { font-size: 10px; color: var(--text-light); margin-top: 2px; }
+
+/* ─── FOOTER ─── */
+.site-footer {
+  background: #1a1a2e;
+  color: #ccc;
+  margin-top: 40px;
+}
+.footer-tricolor { height: 5px; background: linear-gradient(to right, var(--saffron) 33.33%, #fff 33.33% 66.66%, var(--green) 66.66%); }
+.footer-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 24px;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 32px;
+}
+@media (max-width: 900px) { .footer-main { grid-template-columns: 1fr 1fr; } }
+.footer-brand { display: flex; flex-direction: column; gap: 12px; }
+.footer-brand-name { font-size: 18px; font-weight: 700; color: #fff; }
+.footer-brand-name .tld { color: var(--saffron); }
+.footer-brand-name .gov-p { color: #7ec8a0; }
+.footer-desc { font-size: 12px; color: #999; line-height: 1.6; max-width: 260px; }
+.footer-col-title { font-size: 13px; font-weight: 600; color: #fff; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+.footer-link {
+  display: block;
+  font-size: 12px;
+  color: #999;
+  text-decoration: none;
+  margin-bottom: 8px;
+  transition: color 0.15s;
+  cursor: pointer;
+  font-family: var(--font-sans);
+}
+.footer-link:hover { color: var(--saffron); }
+.footer-bottom {
+  border-top: 1px solid #2a2a45;
+  padding: 16px 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: #666;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ─── COOKIE BANNER ─── */
+#cookieBanner {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 999;
+  background: #fff;
+  border-top: 3px solid var(--saffron);
+  box-shadow: 0 -4px 24px rgba(0,0,0,0.12);
+  padding: 16px 32px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  font-size: 13px;
+  color: var(--text-dark);
+  flex-wrap: wrap;
+  animation: slideUp 0.5s cubic-bezier(0.16,1,0.3,1) 1.5s both;
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+#cookieBanner p { flex: 1; min-width: 240px; line-height: 1.5; }
+#cookieBanner a { color: var(--navy); text-decoration: underline; cursor: pointer; }
+.cookie-btns { display: flex; gap: 10px; flex-shrink: 0; flex-wrap: wrap; }
+.cookie-btn {
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  letter-spacing: 0.3px;
+  border: 1.5px solid transparent;
+  transition: all 0.15s;
+}
+.cookie-btn.customize { background: #fff; border-color: var(--border); color: var(--text-mid); }
+.cookie-btn.customize:hover { border-color: #888; }
+.cookie-btn.decline   { background: #fff; border-color: var(--border); color: var(--text-mid); }
+.cookie-btn.decline:hover   { border-color: #888; }
+.cookie-btn.accept    { background: var(--red-gov); color: #fff; border-color: var(--red-gov); }
+.cookie-btn.accept:hover    { background: #a93226; }
+
+/* ─── ACCESSIBILITY BAR ─── */
+.access-bar {
+  position: fixed;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  z-index: 80;
+}
+.access-btn {
+  width: 36px; height: 36px;
+  background: rgba(0,0,128,0.88);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--font-sans);
+  border-left: 2px solid rgba(255,255,255,0.15);
+  transition: background 0.15s;
+}
+.access-btn:hover { background: var(--navy); }
+
+/* Responsive helpers */
+@media (max-width: 768px) {
+  .top-gov-bar { padding: 5px 16px; }
+  .site-header  { padding: 0 16px; }
+  .main-nav     { padding: 0 16px; overflow-x: auto; }
+  .main-section { padding: 24px 16px; }
+  .stats-strip  { grid-template-columns: repeat(2, 1fr); }
+  .hero-search-form { flex-direction: column; border-radius: 6px; }
+  .search-category-wrap { border-left: none; border-top: 1px solid var(--border); border-right: none; border-bottom: 1px solid var(--border); }
+  .search-btn { padding: 14px; }
+  #cookieBanner { padding: 14px 16px; }
+}
+</style>
+</head>
+<body>
+
+<a href="#main-content" class="skip-link">Skip to Main Content</a>
+
+<!-- ─── TOP GOV BAR ─── -->
+<div class="top-gov-bar">
+  <div class="top-gov-bar-left">
+    <div class="gov-india-flag">
+      <div class="flag-stripe s"></div>
+      <div class="flag-stripe s"></div>
+      <div class="flag-stripe w"></div>
+      <div class="flag-stripe w"></div>
+      <div class="flag-stripe g"></div>
+      <div class="flag-stripe g"></div>
+    </div>
+    <a href="#">भारत सरकार | Government of India</a>
+    <span class="sep">|</span>
+    <a href="#">Ministry of Housing &amp; Urban Affairs</a>
+    <span class="sep">|</span>
+    <a href="#">National Smart Cities Mission</a>
+  </div>
+  <div class="top-gov-bar-right">
+    <div class="lang-switch">
+      <button class="lang-btn active" data-lang="en">English</button>
+      <button class="lang-btn" data-lang="hi">हिन्दी</button>
+      <button class="lang-btn" data-lang="mr">मराठी</button>
+    </div>
+    <span class="sep">|</span>
+    <a href="#">Screen Reader</a>
+    <span class="sep">|</span>
+    <a href="#">Sitemap</a>
+  </div>
+</div>
+
+<!-- Tricolor bar -->
+<div class="tricolor-bar"></div>
+
+<!-- ─── SITE HEADER ─── -->
+<header class="site-header">
+  <a class="header-emblem-wrap" href="#">
+    <div class="header-emblem-img">
+      <!-- Ashoka Lion Capital SVG -->
+      <svg class="emblem-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Base platform -->
+        <rect x="20" y="82" width="60" height="6" rx="1" fill="#1a1a6a"/>
+        <rect x="15" y="87" width="70" height="4" rx="1" fill="#000080"/>
+        <!-- Dharma Chakra -->
+        <circle cx="50" cy="75" r="7" fill="none" stroke="#000080" stroke-width="1.5"/>
+        <circle cx="50" cy="75" r="2" fill="#000080"/>
+        <line x1="50" y1="68" x2="50" y2="82" stroke="#000080" stroke-width="0.8"/>
+        <line x1="43" y1="75" x2="57" y2="75" stroke="#000080" stroke-width="0.8"/>
+        <line x1="45" y1="70" x2="55" y2="80" stroke="#000080" stroke-width="0.8"/>
+        <line x1="55" y1="70" x2="45" y2="80" stroke="#000080" stroke-width="0.8"/>
+        <!-- Lions body (simplified) -->
+        <ellipse cx="38" cy="58" rx="9" ry="12" fill="#1a1a6a"/>
+        <ellipse cx="62" cy="58" rx="9" ry="12" fill="#1a1a6a"/>
+        <!-- Center lion -->
+        <ellipse cx="50" cy="55" rx="11" ry="14" fill="#000080"/>
+        <!-- Heads -->
+        <circle cx="38" cy="44" r="7" fill="#1a1a6a"/>
+        <circle cx="62" cy="44" r="7" fill="#1a1a6a"/>
+        <circle cx="50" cy="40" r="8" fill="#000080"/>
+        <!-- Manes -->
+        <circle cx="38" cy="44" r="9" fill="none" stroke="#1a1a6a" stroke-width="2"/>
+        <circle cx="62" cy="44" r="9" fill="none" stroke="#1a1a6a" stroke-width="2"/>
+        <circle cx="50" cy="40" r="11" fill="none" stroke="#000080" stroke-width="2"/>
+        <!-- Crown details -->
+        <polygon points="44,32 46,26 48,32" fill="#FF9933"/>
+        <polygon points="50,29 52,22 54,29" fill="#FF9933"/>
+        <polygon points="56,32 58,26 60,32" fill="#FF9933"/>
+        <!-- Eyes -->
+        <circle cx="38" cy="43" r="1.5" fill="#fff"/>
+        <circle cx="62" cy="43" r="1.5" fill="#fff"/>
+        <circle cx="50" cy="39" r="1.5" fill="#fff"/>
+        <!-- Paws -->
+        <ellipse cx="30" cy="68" rx="5" ry="3" fill="#1a1a6a"/>
+        <ellipse cx="70" cy="68" rx="5" ry="3" fill="#1a1a6a"/>
+        <!-- Satyamev Jayate text placeholder -->
+        <text x="50" y="97" font-size="5" fill="#000080" text-anchor="middle" font-family="serif" font-weight="bold">सत्यमेव जयते</text>
+      </svg>
+    </div>
+    <div class="header-title-block">
+      <div class="header-site-name">
+        inframap<span class="dot">.</span><span class="gov">gov</span>.in<span class="header-beta">BETA</span>
+      </div>
+      <div class="header-tagline">National Infrastructure Monitoring Portal</div>
+      <div class="header-tagline-hi">राष्ट्रीय अवसंरचना निगरानी पोर्टल</div>
+    </div>
+  </a>
+
+  <div class="header-right">
+    <div class="header-icon-btn" title="Search">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+    </div>
+    <div class="header-icon-btn" title="Accessibility">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z"/></svg>
+    </div>
+    <div class="header-icon-btn" title="Notifications">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/></svg>
+    </div>
+    <div class="header-icon-btn" title="Share">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z"/></svg>
+    </div>
+    <div class="header-icon-btn" title="Calendar">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
+    </div>
+  </div>
+</header>
+
+<!-- ─── MAIN NAV ─── -->
+<nav class="main-nav">
+  <a class="nav-link active" onclick="scrollToTop()">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="width:15px;height:15px;"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg>
+    <span data-i18n="nav-home">Home</span>
+  </a>
+  <a class="nav-link" onclick="goToDash('dashboard')">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="width:15px;height:15px;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-6v8.25M3.75 6A2.25 2.25 0 016 3.75h.008A2.25 2.25 0 018.25 6v0a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 8.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h.008A2.25 2.25 0 018.25 15.75v0a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25v0z"/></svg>
+    <span data-i18n="nav-dash">Risk Dashboard</span>
+  </a>
+  <a class="nav-link" onclick="goToDash('report')">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="width:15px;height:15px;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z"/></svg>
+    File Report
+  </a>
+  <a class="nav-link" onclick="goToDash('dashboard')">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="width:15px;height:15px;"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
+    City Maps
+  </a>
+  <a class="nav-link" onclick="goToDash('dashboard')">Hospitals</a>
+  <a class="nav-link" onclick="goToDash('dashboard')">Schools</a>
+  <a class="nav-link" onclick="scrollToSection('main-content')">Schemes</a>
+  <a class="nav-link" onclick="showInfoModal('Open Data / RTI','Download infrastructure datasets under the Right to Information Act. All data is available in CSV and JSON formats. Visit <strong>data.gov.in</strong> for the national open data portal.','https://data.gov.in','Visit data.gov.in')">Open Data</a>
+  <div class="nav-right">
+    <button class="nav-login-btn" onclick="openLogin()" style="display:flex;align-items:center;gap:8px;">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" style="width:14px;height:14px;flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"/></svg>
+      Citizen Login
+    </button>
+  </div>
+</nav>
+
+<!-- ─── HERO ─── -->
+<section class="hero">
+  <div class="hero-bg"></div>
+
+  <div class="hero-content">
+    <!-- Animated Ashoka Chakra -->
+    <div class="chakra-ring">
+      <svg viewBox="0 0 110 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="55" cy="55" r="50" fill="none" stroke="rgba(255,153,51,0.5)" stroke-width="1.5" stroke-dasharray="4 3"/>
+        <circle cx="55" cy="55" r="42" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+        <circle cx="55" cy="55" r="8" fill="none" stroke="rgba(255,153,51,0.7)" stroke-width="2"/>
+        <!-- 24 spokes -->
+        <g stroke="rgba(255,153,51,0.6)" stroke-width="1.2">
+          <line x1="55" y1="13" x2="55" y2="47"/><line x1="55" y1="63" x2="55" y2="97"/>
+          <line x1="97" y1="55" x2="63" y2="55"/><line x1="47" y1="55" x2="13" y2="55"/>
+          <line x1="81.7" y1="28.3" x2="60.4" y2="49.6"/><line x1="49.6" y1="60.4" x2="28.3" y2="81.7"/>
+          <line x1="81.7" y1="81.7" x2="60.4" y2="60.4"/><line x1="49.6" y1="49.6" x2="28.3" y2="28.3"/>
+          <line x1="28.3" y1="81.7" x2="49.6" y2="60.4"/><line x1="60.4" y1="49.6" x2="81.7" y2="28.3"/>
+          <line x1="28.3" y1="28.3" x2="49.6" y2="49.6"/><line x1="60.4" y1="60.4" x2="81.7" y2="81.7"/>
+          <!-- intermediate spokes -->
+          <line x1="72.8" y1="17.3" x2="58.3" y2="50.7" opacity=".5"/><line x1="51.7" y1="59.3" x2="37.2" y2="92.7" opacity=".5"/>
+          <line x1="92.7" y1="37.2" x2="59.3" y2="51.7" opacity=".5"/><line x1="50.7" y1="58.3" x2="17.3" y2="72.8" opacity=".5"/>
+          <line x1="92.7" y1="72.8" x2="59.3" y2="58.3" opacity=".5"/><line x1="50.7" y1="51.7" x2="17.3" y2="37.2" opacity=".5"/>
+          <line x1="72.8" y1="92.7" x2="58.3" y2="59.3" opacity=".5"/><line x1="51.7" y1="50.7" x2="37.2" y2="17.3" opacity=".5"/>
+          <line x1="37.2" y1="17.3" x2="51.7" y2="50.7" opacity=".5"/><line x1="58.3" y1="59.3" x2="72.8" y2="92.7" opacity=".5"/>
+          <line x1="17.3" y1="37.2" x2="50.7" y2="51.7" opacity=".5"/><line x1="59.3" y1="58.3" x2="92.7" y2="72.8" opacity=".5"/>
+        </g>
+        <circle cx="55" cy="55" r="6" fill="rgba(255,153,51,0.3)" stroke="rgba(255,153,51,0.8)" stroke-width="1.5"/>
+      </svg>
+    </div>
+
+    <div class="hero-site-id">
+      inframap<span class="tld">.</span><span class="gov-part">gov</span>.in<span class="hero-beta-badge">BETA</span>
+    </div>
+    <div class="hero-portal-name">National Infrastructure Monitoring Portal</div>
+    <div class="hero-portal-name-hi">राष्ट्रीय अवसंरचना निगरानी पोर्टल</div>
+    <div class="hero-tagline">Where Public Safety Information Converges</div>
+    <div class="hero-divider"></div>
+
+    <!-- Search Box -->
+    <div class="hero-search-form">
+      <input class="search-input" type="text" placeholder="Search for hospitals, schools, infrastructure issues, cities…" id="heroSearch">
+      <div class="search-category-wrap">
+        <select class="search-category">
+          <option>All Categories</option>
+          <option>Hospitals</option>
+          <option>Schools</option>
+          <option>Roads</option>
+          <option>Water Supply</option>
+          <option>Electricity</option>
+          <option>By City</option>
+        </select>
+        <svg width="14" height="14" fill="none" stroke="#888" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+      </div>
+      <button class="search-btn" onclick="handleSearch()">Search</button>
+    </div>
+
+    <div class="hero-quick-links">
+      <span class="quick-link" onclick="goToDash('dashboard')" style="cursor:pointer;">🏥 Hospitals at Risk</span>
+      <span class="quick-link" onclick="goToDash('dashboard')" style="cursor:pointer;">🏫 Schools at Risk</span>
+      <span class="quick-link" onclick="goToDashCity('pune')" style="cursor:pointer;">🗺️ Pune Infrastructure</span>
+      <span class="quick-link" onclick="goToDashCity('kolhapur')" style="cursor:pointer;">🗺️ Kolhapur Infrastructure</span>
+      <span class="quick-link" onclick="goToDash('dashboard')" style="cursor:pointer;">📊 Risk Heatmap</span>
+      <span class="quick-link" onclick="goToDash('report')" style="cursor:pointer;">📝 File a Complaint</span>
+    </div>
+  </div>
+</section>
+
+<!-- ─── ALERT TICKER ─── -->
+<div class="alert-ticker">
+  <div class="ticker-label">🔴 LIVE ALERTS</div>
+  <div class="ticker-content">
+    <div class="ticker-text" id="tickerText">
+      <span class="ticker-item"><span class="ticker-dot"></span>HIGH RISK: Power outage reported at ICU — CPR Hospital, Kolhapur · 12 mins ago</span>
+      <span class="ticker-item"><span class="ticker-dot"></span>MEDIUM: Water leakage — Rajaram College campus, Kolhapur · 34 mins ago</span>
+      <span class="ticker-item"><span class="ticker-dot"></span>HIGH RISK: Ambulance access road blocked — Sassoon General Hospital, Pune · 1 hr ago</span>
+      <span class="ticker-item"><span class="ticker-dot"></span>LOW: Street light failure near entrance — Fergusson College, Pune · 2 hrs ago</span>
+      <span class="ticker-item"><span class="ticker-dot"></span>MAINTENANCE: Scheduled infrastructure inspection — Satara District Hospital · Tomorrow 9AM</span>
+      <span class="ticker-item"><span class="ticker-dot"></span>HIGH RISK: Oxygen supply irregularity — Ruby Hall Clinic, Pune · Under review</span>
+    </div>
+  </div>
+</div>
+
+<!-- ─── MAIN CONTENT ─── -->
+<main id="main-content" class="main-section">
+
+  <!-- Stats Strip -->
+  <div class="stats-strip">
+    <div class="stat-item">
+      <div class="stat-num" id="c1">0</div>
+      <div class="stat-label">Cities Monitored</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num s" id="c2">0</div>
+      <div class="stat-label">Infrastructure Issues</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num r" id="c3">0</div>
+      <div class="stat-label">High Risk Alerts</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num g" id="c4">0</div>
+      <div class="stat-label">Resolved This Month</div>
+    </div>
+  </div>
+
+  <!-- Services Section -->
+  <div class="section-head">
+    <div class="section-title">Citizen Services</div>
+    <a class="section-view-all" onclick="scrollToSection('main-content')" style="cursor:pointer;">View All Services →</a>
+  </div>
+
+  <div class="services-grid">
+    <a class="service-card" onclick="window.location.href='dash.html'">
+      <div class="service-icon-wrap navy">🗺️</div>
+      <div class="service-title">Risk Infrastructure Map</div>
+      <div class="service-desc">Live map of all flagged hospitals and schools with risk scoring and heatmap</div>
+    </a>
+    <a class="service-card" onclick="goToDash('report')" style="cursor:pointer;">
+      <div class="service-icon-wrap red">📝</div>
+      <div class="service-title">File Infrastructure Report</div>
+      <div class="service-desc">Submit a complaint or report infrastructure failure in your city</div>
+    </a>
+    <a class="service-card" onclick="goToDash('dashboard')" style="cursor:pointer;">
+      <div class="service-icon-wrap saffron">🏥</div>
+      <div class="service-title">Hospital Status Check</div>
+      <div class="service-desc">Real-time status of critical facilities across Pune, Kolhapur, Satara &amp; Sangli</div>
+    </a>
+    <a class="service-card" onclick="goToDash('dashboard')" style="cursor:pointer;">
+      <div class="service-icon-wrap green">🏫</div>
+      <div class="service-title">School Safety Index</div>
+      <div class="service-desc">Safety ratings and infrastructure health of government schools by district</div>
+    </a>
+    <a class="service-card" onclick="goToDash('dashboard')" style="cursor:pointer;">
+      <div class="service-icon-wrap navy">📊</div>
+      <div class="service-title">AI Risk Analytics</div>
+      <div class="service-desc">AI-powered density and severity scoring to prioritize intervention</div>
+    </a>
+    <a class="service-card" onclick="goToDash('dashboard')" style="cursor:pointer;">
+      <div class="service-icon-wrap saffron">📍</div>
+      <div class="service-title">City Infrastructure Census</div>
+      <div class="service-desc">Comprehensive data on public infrastructure across Maharashtra cities</div>
+    </a>
+    <a class="service-card" onclick="showSubscribeModal()" style="cursor:pointer;">
+      <div class="service-icon-wrap green">🔔</div>
+      <div class="service-title">Alert Subscription</div>
+      <div class="service-desc">Subscribe to SMS/email alerts for high-risk issues in your locality</div>
+    </a>
+    <a class="service-card" onclick="showInfoModal('RTI — Open Data Portal','Download infrastructure datasets under the Right to Information Act. All data is available in open CSV and JSON formats. For formal RTI filings, visit <strong>rtionline.gov.in</strong>.','https://rtionline.gov.in','Visit RTI Portal')" style="cursor:pointer;">
+      <div class="service-icon-wrap red">📁</div>
+      <div class="service-title">RTI — Open Data</div>
+      <div class="service-desc">Download infrastructure datasets under Right to Information Act</div>
+    </a>
+  </div>
+
+  <!-- Two-column section -->
+  <div class="two-col-grid">
+
+    <!-- Latest Reports -->
+    <div>
+      <div class="section-head">
+        <div class="section-title">Latest Filed Reports</div>
+        <a class="section-view-all" onclick="window.location.href='dash.html'">My Reports →</a>
+      </div>
+      <div class="reports-list">
+        <div class="report-row">
+          <div class="report-row-icon h">🏥</div>
+          <div class="report-row-body">
+            <div class="report-row-title">Power outage in hospital ICU — CPR Hospital</div>
+            <div class="report-row-meta">
+              <span class="sev-pill high">HIGH</span>
+              <span>Kolhapur</span>
+              <span>Today, 2:14 PM</span>
+            </div>
+          </div>
+        </div>
+        <div class="report-row">
+          <div class="report-row-icon s">🏫</div>
+          <div class="report-row-body">
+            <div class="report-row-title">Unsafe road near school entrance — Rajaram College</div>
+            <div class="report-row-meta">
+              <span class="sev-pill medium">MEDIUM</span>
+              <span>Kolhapur</span>
+              <span>Today, 1:45 PM</span>
+            </div>
+          </div>
+        </div>
+        <div class="report-row">
+          <div class="report-row-icon h">🏥</div>
+          <div class="report-row-body">
+            <div class="report-row-title">Oxygen supply system failure — Sassoon General Hospital</div>
+            <div class="report-row-meta">
+              <span class="sev-pill high">HIGH</span>
+              <span>Pune</span>
+              <span>Yesterday, 9:22 AM</span>
+            </div>
+          </div>
+        </div>
+        <div class="report-row">
+          <div class="report-row-icon s">🏫</div>
+          <div class="report-row-body">
+            <div class="report-row-title">Drainage overflow near school building — MIT College</div>
+            <div class="report-row-meta">
+              <span class="sev-pill medium">MEDIUM</span>
+              <span>Pune</span>
+              <span>Yesterday, 4:00 PM</span>
+            </div>
+          </div>
+        </div>
+        <div class="report-row">
+          <div class="report-row-icon h">🏥</div>
+          <div class="report-row-body">
+            <div class="report-row-title">Emergency entrance blockage — Civil Hospital Satara</div>
+            <div class="report-row-meta">
+              <span class="sev-pill low">LOW</span>
+              <span>Satara</span>
+              <span>13 Mar 2026, 10:30 AM</span>
+            </div>
+          </div>
+        </div>
+        <div class="report-row">
+          <div class="report-row-icon s">🏫</div>
+          <div class="report-row-body">
+            <div class="report-row-title">Street light failure near school area — Shivaji University</div>
+            <div class="report-row-meta">
+              <span class="sev-pill low">LOW</span>
+              <span>Kolhapur</span>
+              <span>12 Mar 2026, 8:00 PM</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar panels -->
+    <div class="sidebar-panel">
+      <!-- City Risk Status -->
+      <div class="info-box">
+        <div class="info-box-header">
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
+          City Risk Status
+        </div>
+        <div class="info-box-body" style="padding:12px;">
+          <div class="city-grid">
+            <div class="city-card" onclick="goToDashCity('pune')" style="cursor:pointer;">
+              <div class="city-card-name">Pune</div>
+              <div class="city-card-stat">24</div>
+              <div class="city-card-sub">Active alerts</div>
+            </div>
+            <div class="city-card" onclick="goToDashCity('kolhapur')" style="cursor:pointer;">
+              <div class="city-card-name">Kolhapur</div>
+              <div class="city-card-stat">13</div>
+              <div class="city-card-sub">Active alerts</div>
+            </div>
+            <div class="city-card" onclick="goToDashCity('satara')" style="cursor:pointer;">
+              <div class="city-card-name">Satara</div>
+              <div class="city-card-stat" style="color:var(--saffron-d);">8</div>
+              <div class="city-card-sub">Active alerts</div>
+            </div>
+            <div class="city-card" onclick="goToDashCity('sangli')" style="cursor:pointer;">
+              <div class="city-card-name">Sangli</div>
+              <div class="city-card-stat" style="color:var(--green);">4</div>
+              <div class="city-card-sub">Active alerts</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Important Links -->
+      <div class="info-box">
+        <div class="info-box-header">
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244"/></svg>
+          Important Links
+        </div>
+        <div class="info-box-body" style="padding:6px 12px;">
+          <a class="info-link" onclick="openExternal('https://smartcities.gov.in')" style="cursor:pointer;"><span class="info-link-dot"></span> Smart Cities Mission — india.gov.in</a>
+          <a class="info-link" onclick="openExternal('https://ndma.gov.in')" style="cursor:pointer;"><span class="info-link-dot"></span> National Disaster Management Authority</a>
+          <a class="info-link" onclick="openExternal('https://pmaymis.gov.in')" style="cursor:pointer;"><span class="info-link-dot"></span> Pradhan Mantri Awas Yojana</a>
+          <a class="info-link" onclick="openExternal('https://mohua.gov.in')" style="cursor:pointer;"><span class="info-link-dot"></span> Ministry of Housing &amp; Urban Affairs</a>
+          <a class="info-link" onclick="openExternal('https://digitalindia.gov.in')" style="cursor:pointer;"><span class="info-link-dot"></span> Digital India Initiative</a>
+          <a class="info-link" onclick="openExternal('https://udm.maharashtra.gov.in')" style="cursor:pointer;"><span class="info-link-dot"></span> Maharashtra Urban Development Dept.</a>
+        </div>
+      </div>
+
+      <!-- Open in Dashboard -->
+      <div class="info-box" style="background:linear-gradient(135deg,#000080,#000050);border:none;">
+        <div style="padding:20px;text-align:center;">
+          <div style="font-size:28px;margin-bottom:8px;">🗺️</div>
+          <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:6px;font-family:var(--font-sans);">Live Risk Dashboard</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:16px;line-height:1.5;">Access the full interactive infrastructure monitoring dashboard</div>
+          <button onclick="openLogin()" style="background:var(--saffron);color:#1a1a1a;border:none;padding:10px 24px;border-radius:3px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-sans);width:100%;transition:background 0.15s;display:flex;align-items:center;justify-content:center;gap:8px;" onmouseover="this.style.background='#e07800'" onmouseout="this.style.background='var(--saffron)'">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" style="width:15px;height:15px;"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"/></svg>
+            Citizen Login → Dashboard
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ─── FOOTER ─── -->
+<footer class="site-footer">
+  <div class="footer-tricolor"></div>
+  <div class="footer-main">
+    <div class="footer-brand">
+      <div class="footer-brand-name">inframap<span class="tld">.</span><span class="gov-p">gov</span>.in</div>
+      <div class="footer-desc">An initiative of the Ministry of Housing &amp; Urban Affairs, Government of India, under the National Smart Cities Mission to monitor and protect critical public infrastructure.</div>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <div style="width:40px;height:4px;border-radius:2px;background:var(--saffron);"></div>
+        <div style="width:40px;height:4px;border-radius:2px;background:#fff;opacity:0.2;"></div>
+        <div style="width:40px;height:4px;border-radius:2px;background:var(--green);"></div>
+      </div>
+    </div>
+    <div>
+      <div class="footer-col-title">Services</div>
+      <a class="footer-link" onclick="goToDash('dashboard')" style="cursor:pointer;">Risk Dashboard</a>
+      <a class="footer-link" onclick="goToDash('report')" style="cursor:pointer;">File a Report</a>
+      <a class="footer-link" onclick="goToDash('dashboard')" style="cursor:pointer;">City Maps</a>
+      <a class="footer-link" onclick="goToDash('dashboard')" style="cursor:pointer;">Hospital Status</a>
+      <a class="footer-link" onclick="goToDash('dashboard')" style="cursor:pointer;">School Safety</a>
+      <a class="footer-link" onclick="openExternal('https://rtionline.gov.in')" style="cursor:pointer;">Open Data / RTI</a>
+    </div>
+    <div>
+      <div class="footer-col-title">Government</div>
+      <a class="footer-link" onclick="openExternal('https://india.gov.in')" style="cursor:pointer;">india.gov.in</a>
+      <a class="footer-link" onclick="openExternal('https://mygov.in')" style="cursor:pointer;">mygov.in</a>
+      <a class="footer-link" onclick="openExternal('https://ndma.gov.in')" style="cursor:pointer;">NDMA</a>
+      <a class="footer-link" onclick="openExternal('https://pmaymis.gov.in')" style="cursor:pointer;">PMAY</a>
+      <a class="footer-link" onclick="openExternal('https://digitalindia.gov.in')" style="cursor:pointer;">Digital India</a>
+      <a class="footer-link" onclick="openExternal('https://mohua.gov.in')" style="cursor:pointer;">MoHUA</a>
+    </div>
+    <div>
+      <div class="footer-col-title">Help &amp; Policy</div>
+      <a class="footer-link" onclick="showInfoModal('About inframap.gov.in','inframap.gov.in is a national initiative under the Smart Cities Mission, Ministry of Housing &amp; Urban Affairs, Government of India. The portal enables citizens to monitor, report, and track infrastructure risks across hospitals and schools in Maharashtra.')" style="cursor:pointer;">About this Portal</a>
+      <a class="footer-link" onclick="showInfoModal('Contact Us','For technical support or queries, write to: <strong>support@inframap.gov.in</strong><br><br>Helpline: <strong>1800-XXX-XXXX</strong> (Toll Free, 9AM–6PM)<br>Ministry of Housing &amp; Urban Affairs, Nirman Bhawan, New Delhi — 110011')" style="cursor:pointer;">Contact Us</a>
+      <a class="footer-link" onclick="showInfoModal('Disclaimer','The information on this portal is provided for general informational purposes only. While every effort is made to keep the data accurate, the Government of India makes no warranties about completeness or accuracy. Risk data is based on citizen-reported incidents and AI scoring.')" style="cursor:pointer;">Disclaimer</a>
+      <a class="footer-link" onclick="showInfoModal('Privacy Policy','inframap.gov.in collects minimal user data (email for login) solely for authentication. No personal data is shared with third parties. Data is stored securely in compliance with the IT Act 2000 and the Digital Personal Data Protection Act 2023.')" style="cursor:pointer;">Privacy Policy</a>
+      <a class="footer-link" onclick="showInfoModal('Terms of Use','By accessing this portal you agree to use it only for lawful purposes. Misuse, filing false reports, or attempting to disrupt the service is punishable under applicable Indian law. All submitted reports become property of the Government of India.')" style="cursor:pointer;">Terms of Use</a>
+      <a class="footer-link" onclick="document.querySelector('.accessibility-panel').scrollIntoView({behavior:'smooth'})" style="cursor:pointer;">Accessibility</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div>© 2026 Government of India. All Rights Reserved. | inframap.gov.in is owned by Ministry of Housing &amp; Urban Affairs.</div>
+    <div style="display:flex;gap:16px;align-items:center;">
+      <span>Last Updated: 13 March 2026</span>
+      <span>|</span>
+      <span>Visitors: <strong style="color:#aaa;">1,24,578</strong></span>
+    </div>
+  </div>
+</footer>
+
+<!-- ─── ACCESSIBILITY BAR ─── -->
+<div class="access-bar">
+  <div class="access-btn" title="Decrease Text" onclick="changeFont(-1)">A-</div>
+  <div class="access-btn" title="Default Text" onclick="changeFont(0)">A</div>
+  <div class="access-btn" title="Increase Text" onclick="changeFont(1)">A+</div>
+  <div class="access-btn" title="High Contrast" onclick="toggleContrast()" style="font-size:10px;background:rgba(255,153,51,0.7);">◑</div>
+  <div class="access-btn" title="Screen Reader" style="font-size:9px;font-weight:normal;">SR</div>
+</div>
+
+<!-- ─── COOKIE BANNER ─── -->
+<div id="cookieBanner">
+  <p>
+    <strong>This website uses cookies to provide a better user experience.</strong><br>
+    By clicking accept, you agree to the policies outlined in the <a href="#">Cookie Settings</a>. This portal is a Government of India initiative.
+  </p>
+  <div class="cookie-btns">
+    <button class="cookie-btn customize" onclick="document.getElementById('cookieBanner').style.display='none'">CUSTOMIZE COOKIES</button>
+    <button class="cookie-btn decline"   onclick="document.getElementById('cookieBanner').style.display='none'">DECLINE OPTIONAL COOKIES</button>
+    <button class="cookie-btn accept"    onclick="document.getElementById('cookieBanner').style.display='none'">ACCEPT ALL COOKIES</button>
+  </div>
+</div>
+
+<script>
+// ── Counter animation ──
+function animCount(id, target, duration, prefix='') {
+  const el = document.getElementById(id);
+  const start = performance.now();
+  const update = (now) => {
+    const p = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - p, 3);
+    el.textContent = prefix + Math.round(target * eased).toLocaleString('en-IN');
+    if (p < 1) requestAnimationFrame(update);
+  };
+  requestAnimationFrame(update);
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    animCount('c1', 4,    900);
+    animCount('c2', 1247, 1400);
+    animCount('c3', 38,   1100);
+    animCount('c4', 312,  1300);
+  }, 300);
+});
+
+// ── Font size ──
+let fontLevel = 0;
+function changeFont(delta) {
+  fontLevel = delta === 0 ? 0 : Math.max(-1, Math.min(2, fontLevel + delta));
+  const sizes = { '-1': '13px', '0': '15px', '1': '17px', '2': '19px' };
+  document.body.style.fontSize = sizes[fontLevel] || '15px';
+}
+
+// ── High contrast ──
+let hc = false;
+function toggleContrast() {
+  hc = !hc;
+  document.body.style.filter = hc ? 'contrast(1.4) brightness(1.1)' : '';
+}
+
+// ── Search ──
+function handleSearch() {
+  const q = document.getElementById('heroSearch').value.trim();
+  const cat = document.querySelector('.search-category').value;
+  if (!q) { showToast('Please enter a search term.', 'warn'); return; }
+  sessionStorage.setItem('dashSearch', JSON.stringify({ q, cat }));
+  fadeOut(() => window.location.href = 'dash.html');
+}
+document.getElementById('heroSearch').addEventListener('keydown', e => {
+  if (e.key === 'Enter') handleSearch();
+});
+
+// ── Language Translation Logic ──
+const translations = {
+  en: {
+    "nav-home": "Home",
+    "nav-dash": "Risk Dashboard"
+    // Add all your English strings here
+  },
+  hi: {
+    "nav-home": "होम",
+    "nav-dash": "जोखिम डैशबोर्ड"
+    // Add all your Hindi strings here
+  },
+  mr: {
+    "nav-home": "मुख्य पृष्ठ",
+    "nav-dash": "धोका डॅशबोर्ड"
+    // Add all your Marathi strings here
+  }
+};
+
+document.querySelectorAll('.lang-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+
+    const lang = this.getAttribute('data-lang');
+
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      if (translations[lang] && translations[lang][key]) {
+        el.textContent = translations[lang][key];
+      }
+    });
+    
+    document.documentElement.lang = lang;
+  });
+});
+
+// ── Nav active ──
+document.querySelectorAll('.nav-link').forEach(link => {
+  link.addEventListener('click', function() {
+    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+
+// ── Login modal ──
+function openLogin() {
+  const user = localStorage.getItem('currentUser');
+  if (user) {
+    // Already logged in — go straight to dashboard
+    document.body.style.opacity = '0';
+    document.body.style.transition = 'opacity 0.35s';
+    setTimeout(() => { window.location.href = 'dash.html'; }, 350);
+    return;
+  }
+  document.getElementById('loginModal').classList.add('lm-open');
+  setTimeout(() => document.getElementById('lmEmail').focus(), 80);
+}
+window.addEventListener("DOMContentLoaded", function() {
+  document.getElementById('lmClose').addEventListener('click', function() {
+    document.getElementById('loginModal').classList.remove('lm-open');
+  });
+});
+document.getElementById('loginModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('loginModal'))
+    document.getElementById('loginModal').classList.remove('lm-open');
+});
+function getAccounts() { try { return JSON.parse(localStorage.getItem('localAccounts') || '{}'); } catch(e) { return {}; } }
+function saveAccounts(a) { localStorage.setItem('localAccounts', JSON.stringify(a)); }
+function lmMsg(msg, type) {
+  const m = document.getElementById('lmMsg');
+  m.textContent = msg; m.style.display = 'block';
+  m.style.color      = type === 'error' ? '#c0392b' : '#138808';
+  m.style.background = type === 'error' ? 'rgba(192,57,43,.07)' : 'rgba(19,136,8,.07)';
+  m.style.borderColor= type === 'error' ? 'rgba(192,57,43,.2)' : 'rgba(19,136,8,.2)';
+}
+async function lmLogin() {
+  const email = document.getElementById('lmEmail').value.trim();
+  const pass  = document.getElementById('lmPass').value;
+  if (!email || !pass) { lmMsg('Please enter your email and password.', 'error'); return; }
+  const btn = document.getElementById('lmLoginBtn');
+  btn.textContent = 'Verifying…'; btn.disabled = true;
+  await new Promise(r => setTimeout(r, 350));
+  const a = getAccounts();
+  if (!a[email])            { lmMsg('No account found. Please register first.', 'error'); btn.textContent = 'Login → Dashboard'; btn.disabled = false; return; }
+  if (a[email] !== btoa(pass)) { lmMsg('Incorrect password. Try again.', 'error');         btn.textContent = 'Login → Dashboard'; btn.disabled = false; return; }
+  localStorage.setItem('currentUser', email);
+  lmMsg('✓ Login successful — opening dashboard…', 'success');
+  setTimeout(() => {
+    document.body.style.opacity = '0'; document.body.style.transition = 'opacity 0.35s';
+    setTimeout(() => { window.location.href = 'dash.html'; }, 350);
+  }, 750);
+}
+function lmRegister() {
+  const email = document.getElementById('lmEmail').value.trim();
+  const pass  = document.getElementById('lmPass').value;
+  if (!email || !pass) { lmMsg('Please enter email and password.', 'error'); return; }
+  if (pass.length < 6)  { lmMsg('Password must be at least 6 characters.', 'error'); return; }
+  const a = getAccounts();
+  if (a[email]) { lmMsg('Account already exists. Please login.', 'error'); return; }
+  a[email] = btoa(pass); saveAccounts(a);
+  lmMsg('✓ Account created! You can now login.', 'success');
+}
+function lmTogglePass() {
+  const inp = document.getElementById('lmPass');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('loginModal').classList.contains('lm-open')) lmLogin();
+});
+</script>
+<!-- ─── LOGIN MODAL ─── -->
+<style>
+#loginModal{position:fixed;inset:0;z-index:900;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.5);backdrop-filter:blur(2px);}
+#loginModal.lm-open{display:flex;}
+.lm-box{background:#fff;border-radius:4px;width:100%;max-width:400px;box-shadow:0 16px 48px rgba(0,0,0,.25);overflow:hidden;animation:lmIn .3s cubic-bezier(.16,1,.3,1) both;}
+@keyframes lmIn{from{opacity:0;transform:scale(.95) translateY(12px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.lm-head{background:#000080;padding:16px 20px;display:flex;align-items:flex-start;justify-content:space-between;}
+.lm-head-title{font-size:16px;font-weight:700;color:#fff;font-family:'Noto Sans',sans-serif;}
+.lm-head-sub{font-size:11px;color:rgba(255,255,255,.5);margin-top:3px;font-family:'Noto Sans',sans-serif;}
+.lm-tri{height:3px;background:linear-gradient(to right,#FF9933 33.33%,#fff 33.33% 66.66%,#138808 66.66%);}
+.lm-close{background:none;border:none;color:rgba(255,255,255,.6);cursor:pointer;padding:2px;display:flex;align-items:center;border-radius:3px;transition:all .15s;flex-shrink:0;}
+.lm-close:hover{color:#fff;background:rgba(255,255,255,.12);}
+.lm-close svg{width:18px;height:18px;}
+.lm-body{padding:24px;}
+.lm-group{margin-bottom:14px;}
+.lm-label{display:block;font-size:12px;font-weight:600;color:#1a1a1a;margin-bottom:5px;font-family:'Noto Sans',sans-serif;}
+.lm-label .req{color:#c0392b;}
+.lm-wrap{position:relative;}
+.lm-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#bbb;display:flex;align-items:center;pointer-events:none;transition:color .15s;}
+.lm-wrap:focus-within .lm-icon{color:#000080;}
+.lm-input{width:100%;padding:10px 36px;border:1px solid #d4cfc8;border-radius:3px;font-family:'Noto Sans',sans-serif;font-size:13px;color:#1a1a1a;background:#fafafa;outline:none;transition:all .15s;}
+.lm-input::placeholder{color:#ccc;}
+.lm-input:focus{border-color:#000080;background:#fff;box-shadow:0 0 0 3px rgba(0,0,128,.08);}
+.lm-eye{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#ccc;cursor:pointer;padding:3px;display:flex;align-items:center;}
+.lm-eye:hover{color:#000080;}
+.lm-eye svg{width:15px;height:15px;}
+#lmMsg{display:none;font-size:12px;padding:8px 12px;border:1px solid transparent;border-radius:3px;margin-bottom:14px;font-family:'Noto Sans',sans-serif;line-height:1.5;}
+.lm-btn-primary{width:100%;padding:10px;background:#000080;color:#fff;border:none;border-radius:3px;font-family:'Noto Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px;transition:all .15s;}
+.lm-btn-primary:hover{background:#00006a;}
+.lm-btn-primary:disabled{opacity:.6;cursor:not-allowed;}
+.lm-btn-secondary{width:100%;padding:10px;background:#fff;color:#138808;border:1.5px solid #138808;border-radius:3px;font-family:'Noto Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;}
+.lm-btn-secondary:hover{background:#f0faf0;}
+.lm-divider{display:flex;align-items:center;gap:10px;margin:12px 0;color:#999;font-size:11px;font-family:'Noto Sans',sans-serif;}
+.lm-divider::before,.lm-divider::after{content:'';flex:1;height:1px;background:#d4cfc8;}
+.lm-foot{padding:10px 20px;background:#f0ede7;border-top:1px solid #d4cfc8;font-size:11px;color:#666;text-align:center;font-family:'Noto Sans',sans-serif;}
+</style>
+<div id="loginModal">
+  <div class="lm-box">
+    <div class="lm-head">
+      <div>
+        <div class="lm-head-title">Citizen Login</div>
+        <div class="lm-head-sub">inframap.gov.in — Secure Access Portal</div>
+      </div>
+      <button class="lm-close" id="lmClose">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="lm-tri"></div>
+    <div class="lm-body">
+      <div id="lmMsg"></div>
+      <div class="lm-group">
+        <label class="lm-label">Email / User ID <span class="req">*</span></label>
+        <div class="lm-wrap">
+          <span class="lm-icon"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg></span>
+          <input id="lmEmail" type="email" class="lm-input" placeholder="you@example.com" autocomplete="email">
+        </div>
+      </div>
+      <div class="lm-group">
+        <label class="lm-label">Password <span class="req">*</span></label>
+        <div class="lm-wrap">
+          <span class="lm-icon"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg></span>
+          <input id="lmPass" type="password" class="lm-input" placeholder="••••••••" minlength="6" autocomplete="current-password">
+          <button type="button" class="lm-eye" onclick="lmTogglePass()"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></button>
+        </div>
+      </div>
+      <button id="lmLoginBtn" class="lm-btn-primary" onclick="lmLogin()">Login → Dashboard</button>
+      <div class="lm-divider">New user?</div>
+      <button class="lm-btn-secondary" onclick="lmRegister()">Register Account</button>
+    </div>
+    <div class="lm-foot">🔒 Secured by MeitY &nbsp;|&nbsp; inframap.gov.in</div>
+  </div>
+</div>
+
+<style>
+/* Info Modal */
+#infoModal,#subModal{position:fixed;inset:0;z-index:950;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.5);backdrop-filter:blur(2px);}
+#infoModal.im-open,#subModal.sm-open{display:flex;}
+.im-box,.sm-box{background:#fff;border-radius:4px;width:100%;max-width:440px;box-shadow:0 16px 48px rgba(0,0,0,.25);overflow:hidden;animation:lmIn .3s cubic-bezier(.16,1,.3,1) both;}
+.im-head,.sm-head{background:#000080;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;}
+.im-head-title,.sm-head-title{font-size:15px;font-weight:700;color:#fff;font-family:'Noto Sans',sans-serif;}
+.im-tri,.sm-tri{height:3px;background:linear-gradient(to right,#FF9933 33.33%,#fff 33.33% 66.66%,#138808 66.66%);}
+.im-close,.sm-close{background:none;border:none;color:rgba(255,255,255,.6);cursor:pointer;padding:4px;display:flex;align-items:center;border-radius:3px;transition:all .15s;}
+.im-close:hover,.sm-close:hover{color:#fff;background:rgba(255,255,255,.12);}
+.im-body,.sm-body{padding:22px;font-family:'Noto Sans',sans-serif;font-size:13px;color:#333;line-height:1.7;}
+.im-link{display:inline-block;margin-top:14px;background:#000080;color:#fff;padding:8px 18px;border-radius:3px;font-size:12px;font-weight:700;text-decoration:none;font-family:'Noto Sans',sans-serif;}
+.im-link:hover{background:#00006a;}
+.im-foot,.sm-foot{padding:10px 20px;background:#f0ede7;border-top:1px solid #d4cfc8;font-size:11px;color:#888;text-align:center;font-family:'Noto Sans',sans-serif;}
+/* Subscribe form */
+.sub-group{margin-bottom:14px;}
+.sub-label{display:block;font-size:12px;font-weight:600;color:#1a1a1a;margin-bottom:5px;font-family:'Noto Sans',sans-serif;}
+.sub-input,.sub-select{width:100%;padding:9px 12px;border:1px solid #d4cfc8;border-radius:3px;font-family:'Noto Sans',sans-serif;font-size:13px;color:#1a1a1a;background:#fafafa;outline:none;transition:border .15s;}
+.sub-input:focus,.sub-select:focus{border-color:#000080;background:#fff;}
+.sub-checks{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;}
+.sub-check-label{display:flex;align-items:center;gap:5px;font-size:12px;font-family:'Noto Sans',sans-serif;color:#333;cursor:pointer;background:#f0ede7;padding:5px 10px;border-radius:3px;border:1px solid #d4cfc8;}
+.sub-check-label:has(.sub-check:checked){background:#e8f5e9;border-color:#138808;color:#138808;}
+.sub-btn{width:100%;padding:10px;background:#138808;color:#fff;border:none;border-radius:3px;font-family:'Noto Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:background .15s;}
+.sub-btn:hover{background:#0f6b06;}
+@keyframes fadeInUp{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+</style>
+
+<!-- Info Modal -->
+<div id="infoModal">
+  <div class="im-box">
+    <div class="im-head">
+      <div class="im-head-title" id="infoModalTitle"></div>
+      <button class="im-close" id="imClose"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>
+    </div>
+    <div class="im-tri"></div>
+    <div class="im-body" id="infoModalBody"></div>
+    <div style="padding:0 22px 18px;"><a class="im-link" id="infoModalLink" target="_blank" rel="noopener"></a></div>
+    <div class="im-foot">inframap.gov.in — Government of India</div>
+  </div>
+</div>
+
+<!-- Subscribe Modal -->
+<div id="subModal">
+  <div class="sm-box">
+    <div class="sm-head">
+      <div class="sm-head-title">🔔 Subscribe to Risk Alerts</div>
+      <button class="sm-close" id="smClose"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>
+    </div>
+    <div class="sm-tri"></div>
+    <div class="sm-body">
+      <div class="sub-group">
+        <label class="sub-label">Email Address <span style="color:#c0392b;">*</span></label>
+        <input id="subEmail" type="email" class="sub-input" placeholder="you@example.com">
+      </div>
+      <div class="sub-group">
+        <label class="sub-label">City</label>
+        <select id="subCity" class="sub-select">
+          <option value="all">All Cities</option>
+          <option value="pune">Pune</option>
+          <option value="kolhapur">Kolhapur</option>
+          <option value="satara">Satara</option>
+          <option value="sangli">Sangli</option>
+        </select>
+      </div>
+      <div class="sub-group">
+        <label class="sub-label">Alert Types <span style="color:#c0392b;">*</span></label>
+        <div class="sub-checks">
+          <label class="sub-check-label"><input type="checkbox" class="sub-check" value="hospital"> 🏥 Hospitals</label>
+          <label class="sub-check-label"><input type="checkbox" class="sub-check" value="school"> 🏫 Schools</label>
+          <label class="sub-check-label"><input type="checkbox" class="sub-check" value="high"> 🔴 High Risk Only</label>
+          <label class="sub-check-label"><input type="checkbox" class="sub-check" value="all_sev"> 📊 All Severities</label>
+        </div>
+      </div>
+      <button class="sub-btn" onclick="subSubmit()">Subscribe to Alerts</button>
+    </div>
+    <div class="sm-foot">You can unsubscribe anytime · inframap.gov.in</div>
+  </div>
+</div>
+
+<script>
+// ── Utility: fade + navigate ──
+function fadeOut(cb){document.body.style.transition='opacity 0.3s';document.body.style.opacity='0';setTimeout(cb,320);}
+
+// ── Open external gov link ──
+function openExternal(url){window.open(url,'_blank','noopener');}
+
+// ── Scroll helpers ──
+function scrollToTop(){window.scrollTo({top:0,behavior:'smooth'});}
+function scrollToSection(id){const el=document.getElementById(id);if(el)el.scrollIntoView({behavior:'smooth'});}
+
+// ── goToDash: requires login, then opens dashboard view ──
+function goToDash(view){
+  const user=localStorage.getItem('currentUser');
+  if(view) sessionStorage.setItem('dashView',view);
+  if(user){fadeOut(()=>window.location.href='dash.html');}
+  else{document.getElementById('loginModal').classList.add('lm-open');setTimeout(()=>document.getElementById('lmEmail').focus(),80);}
+}
+
+// ── goToDashCity: pre-select a city then open dash ──
+function goToDashCity(city){
+  sessionStorage.setItem('dashCity',city);
+  goToDash('dashboard');
+}
+
+// ── Info Modal ──
+function showInfoModal(title,body,linkUrl,linkLabel){
+  document.getElementById('infoModalTitle').textContent=title;
+  document.getElementById('infoModalBody').innerHTML=body;
+  const a=document.getElementById('infoModalLink');
+  if(linkUrl){a.href=linkUrl;a.textContent=linkLabel||'Learn More';a.target='_blank';a.rel='noopener';a.style.display='inline-block';}
+  else{a.style.display='none';}
+  document.getElementById('infoModal').classList.add('im-open');
+}
+document.getElementById('imClose').addEventListener('click',()=>document.getElementById('infoModal').classList.remove('im-open'));
+document.getElementById('infoModal').addEventListener('click',e=>{if(e.target===document.getElementById('infoModal'))document.getElementById('infoModal').classList.remove('im-open');});
+
+// ── Subscribe Modal ──
+function showSubscribeModal(){
+  document.getElementById('subModal').classList.add('sm-open');
+  setTimeout(()=>document.getElementById('subEmail').focus(),80);
+}
+document.getElementById('smClose').addEventListener('click',()=>document.getElementById('subModal').classList.remove('sm-open'));
+document.getElementById('subModal').addEventListener('click',e=>{if(e.target===document.getElementById('subModal'))document.getElementById('subModal').classList.remove('sm-open');});
+function subSubmit(){
+  const email=document.getElementById('subEmail').value.trim();
+  const city=document.getElementById('subCity').value;
+  const types=[...document.querySelectorAll('.sub-check:checked')].map(c=>c.value);
+  if(!email||!email.includes('@')){showPortalToast('Please enter a valid email address.','error');return;}
+  if(!types.length){showPortalToast('Please select at least one alert type.','warn');return;}
+  const subs=JSON.parse(localStorage.getItem('alertSubs')||'[]');
+  subs.push({email,city,types,ts:Date.now()});
+  localStorage.setItem('alertSubs',JSON.stringify(subs));
+  document.getElementById('subModal').classList.remove('sm-open');
+  showPortalToast('✓ Subscribed! Alerts will be sent to '+email,'success');
+}
+
+// ── Search override ──
+(function(){
+  const origSearch=window.handleSearch;
+  window.handleSearch=function(){
+    const q=document.getElementById('heroSearch').value.trim();
+    const cat=document.querySelector('.search-category').value;
+    if(!q){showPortalToast('Please enter a search term.','warn');return;}
+    sessionStorage.setItem('dashSearch',JSON.stringify({q,cat}));
+    goToDash('dashboard');
+  };
+})();
+
+// ── Toast ──
+function showPortalToast(msg,type){
+  const colors={success:'#138808',error:'#c0392b',warn:'#e07800'};
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(0);background:#fff;border-left:4px solid '+( colors[type]||colors.success)+';padding:12px 20px;border-radius:3px;box-shadow:0 4px 16px rgba(0,0,0,.18);font-family:"Noto Sans",sans-serif;font-size:13px;color:#1a1a1a;z-index:9999;max-width:380px;text-align:center;';
+  t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>{t.style.transition='opacity .3s';t.style.opacity='0';setTimeout(()=>t.remove(),300);},3000);
+}
+</script>
+
+</body>
+</html>
